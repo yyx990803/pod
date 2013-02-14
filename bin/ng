@@ -66,9 +66,11 @@ var tasks = {
             repos = stdout.match(/\b.*\.git\b/g)
             console.log(repos)
             exec('ls ' + config.srv, function (err, stdout) {
-                works = stdout.split(/\s|\n/)
+                works = stdout.split(/\s+|\n/)
+                console.log(works)
                 repos.forEach(function (r) {
                     var name = r.slice(0, -4)
+                    console.log(name)
                     if (works.indexOf(r) !== -1) {
                         apps.push(inspectApp(name))
                     }
