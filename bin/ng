@@ -16,7 +16,7 @@ var tasks = {
             work = config.srv + '/' + appname
 
         if (fs.existsSync(repo)) {
-            console.log('Error: a repo with that name already exists.')
+            console.error('Error: a repo with that name already exists.')
             return
         }
         fs.mkdirSync(repo)
@@ -26,8 +26,8 @@ var tasks = {
                 console.log(err)
             } else {
                 console.log('create bare repo at ' + repo)
-                // edit post update hook
-                editHook(appname, repo, work)
+                // add post-update hook
+                createHook(appname, repo, work)
                 // create working copy
                 exec('git clone ' + repo + ' ' + work, function (err) {
                     console.log(err ? err : 'create empty working copy at ' + work)
@@ -37,8 +37,20 @@ var tasks = {
     },
 
     'delete': function (appname) {
-        exec('rm -rf ' + config.git + '/' + appname + '.git')
-        exec('rm -rf ' + config.srv + '/' + appname)
+        console.log('Really delete app \'' + appname + '\'? (y/n)')
+        process.stdin.resume()
+        process.stdin.setEncoding('utf8');
+        process.stdin.on('data', function (input) {
+            process.stdin.pause()
+            if (input === 'y\n') {
+                var repo = config.git + '/' + appname + '.git',
+                    work = config.srv + '/' + appname
+                exec('rm -rf ' + repo + ' ' + work, function (err) {
+                    console.log(err ? err : (appname + ' deleted.'))
+                })
+            }
+        })
+        
     },
 
     proxy: function (port, domain) {
@@ -83,10 +95,9 @@ exec('whoami | echo ~', function (err, stdout) {
             if (err) {
                 console.log(err)
             } else {
-                console.log('Created new .ngconfig in ' + userHome)
-                console.log('git: ' + userHome)
-                console.log('srv: ' + userHome)
-                console.log('You can change them with \'ng config key val\'')
+                console.log('node-git: created new .ngconfig in ' + userHome)
+                console.log('  git: ' + userHome)
+                console.log('  srv: ' + userHome)
                 doCommand()
             }
         })
@@ -100,12 +111,14 @@ function doCommand () {
     if (tasks[command]) {
         tasks[command](args[1], args[2])
     } else {
-        console.log('node-git: command "' + command + '" not found')
+        if (command) {
+            console.error('node-git: unknown command ' + command)
+        }
     }
 
 }
 
-function editHook (appname, repo, work) {
+function createHook (appname, repo, work) {
 
     var hook = repo + '/hooks/post-update'
     var data =
