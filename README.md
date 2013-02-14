@@ -28,10 +28,6 @@ Other prerequisites: Git, an account with properly set up ssh key and sudo privi
 
 - shows path to app's bare repo
 
-`do sethome path`
+`do config key val`
 
-- set home folder
-
-`do setsrv path`
-
-- set working tree folder
+- set config values and save in config.json

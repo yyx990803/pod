@@ -1,5 +1,5 @@
 {
-    "name": "do",
+    "name": "node-git",
     "version": "0.0.1",
     "author": "evan",
     "description": "personal deployment for Node.js + Varnish using git",
@@ -7,7 +7,7 @@
         "optimist": ">= 0.3.5"
     },
     "bin": {
-        "do": "./bin/do"
+        "ng": "./bin/ng"
     },
     "engines": {
         "node": ">= 0.8.x"

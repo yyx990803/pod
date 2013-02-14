@@ -1,0 +1,127 @@
+#!/usr/bin/env node
+
+var args = require('optimist').argv._,
+    fs = require('fs'),
+    exec = require('child_process').exec,
+    config = require('../config.json')
+
+var tasks = {
+
+    create: function (appname) {
+        // setup bare git repo
+        var repo = config.home + '/' + appname + '.git',
+            work = config.srv + '/' + appname
+
+        fs.mkdirSync(repo)
+
+        exec('git --git-dir ' + repo + ' --bare init', function (err) {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log('create bare repo at ' + repo)
+                // edit post update hook
+                editHook(appname, repo, work)
+                // create working copy
+                exec('git clone ' + repo, function (err) {
+                    if (err) {
+                        console.log(err)
+                    } else {
+                        exec('mv ' + appname + ' ' + work)
+                        console.log('create empty working copy at ' + work)
+                    }
+                })
+            }
+        })
+    },
+
+    proxy: function (port, domain) {
+
+    },
+
+    repo: function (appname) {
+        console.log('ssh://' + config.user + '@' + config.host + ':' + config.port + config.home + '/' + (appname || 'myapp') + '.git')
+    },
+
+    config: function (key, val) {
+        if (config[key]) {
+            config[key] = val
+            fs.writeFile(__dirname + '/../config.json', formatJSON(JSON.stringify(config)))
+        }
+    }
+
+}
+
+var command = args[0]
+
+if (tasks[command]) {
+    tasks[command](args[1], args[2])
+} else {
+    console.log('node-git: command "' + command + '" not found')
+}
+
+function editHook (appname, repo, work) {
+
+    var hook = repo + '/hooks/post-update'
+    var data =
+        '#!/bin/bash\n'
+        + 'cd ' + work + '\n'
+        + 'unset GIT_DIR\n'
+        + 'git pull\n'
+        + 'npm install\n'
+        + 'script=\'' + work + '/app.js\'\n'
+        + 'if forever list | grep $script\n'
+        + 'then\n'
+        + '    forever restart $script\n'
+        + 'else\n'
+        + '    NODE_ENV=production forever start $script\n'
+        + 'fi'
+
+    fs.writeFile(hook, data, function (err) {
+        if (err) {
+            console.log(err)
+        } else {
+            console.log('create post-update hook')
+        }
+    })
+
+}
+
+function formatJSON (val) {
+    var retval = ''
+    var str = val
+    var pos = 0
+    var strLen = str.length
+    var indentStr = '    '
+    var newLine = '\n'
+    var char = ''
+    
+    for (var i=0; i<strLen; i++) {
+        char = str.substring(i, i + 1)
+        
+        if (char === '}' || char === ']') {
+            retval = retval + newLine
+            pos = pos - 1
+            
+            for (var j=0; j<pos; j++) {
+                retval = retval + indentStr
+            }
+        }
+        
+        if (char === ':') char = char + ' '
+        retval = retval + char;
+        
+        if (char === '{' || char === '[' || char === ',') {
+            retval = retval + newLine
+            
+            if (char === '{' || char === '[') {
+                pos = pos + 1
+            }
+            
+            for (var k=0; k<pos; k++) {
+                retval = retval + indentStr
+            }
+        }
+    }
+    
+    return retval
+}
