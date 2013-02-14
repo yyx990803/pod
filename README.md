@@ -1,38 +1,59 @@
-## Personal Deployment Tool
+# OK
 
-### Stack
+A simple personal tool that simplifies the workflow of setting up and updating a new Node.js app on a Linux server with Git.
+Each project gets a bare Git repo that can be pushed to, and auto updates the working copy and restart the process with `forever` after a push.
+This is not on npm because it's probably a too personal use case. If you want to use it, simply clone it then `npm link`.
 
-Node.js + Varnish.
-Other prerequisites: Git
-Make sure your account can connect via ssh and owns home and srv directories.
+## Prerequisites
 
-### Commands
+Git
+Node.js
+[Forever](https://github.com/nodejitsu/forever)
+A user account with SSH access and proper privileges
 
-`ng create appname`
+## Commands
 
-- setup a bare git repo in home folder
-- edit the post-update hook to do:
-    - git pull
-    - npm install
-    - start/restart the process with forever
-- create working tree in /srv by git clone
+    ok
 
-`ng remove appname`
+Prints config for current paths:
 
-- deletes the app
+- `git_dir`: the directory to hold your bare git repos (the remotes you push to)
+- `srv_dir`: the directory to hold your working copies
 
-`ng proxy 8888 example.youyuxi.com`
+You account should be able to read/write/execute in `git_dir` and read/write in `srv_dir`. The config file is `~/.ngconfig`. If no config file is found it will create a new one with both paths pointing to your home folder.
 
-- run this after setting A Records in service provider's control panel
-- edit `/etc/varnish/default.vcl`:
-    - add new backend
-    - add match rule in `sub vcl_recv`
-- restart varnish
+    ok create appname
 
-`ng repo appname`
+Sets up a bare git repo `appname.git` in `git_dir`, then adds a post-update hook that does:
 
-- shows path to app's bare repo
+- git pull
+- npm install
+- start/restart the process with forever
 
-`ng config key val`
+Finally creates an empty working copy in `srv_dir` using `git clone`.
 
-- set config values and save in config.json
+    ok rm appname
+
+Deletes the app. Will prompt before deleting.
+
+    ok list
+
+Lists existing apps and attempts to sniff the port they're listening to.
+Note that it does this by simply checking if a repo and a working copy with the same name exists in `git_dir` and `srv_dir`.
+
+    ok set key val
+
+Sets the config path, e.g. `ok set srv_dir /srv`.
+
+## Workflow
+
+### On the server
+
+1. `ok create myapp`
+
+### In your local repo
+
+1. Make sure your main file is named `app.js`
+2. `git remote add deploy ssh://username@host[:port]/git_dir/myapp.git`
+3. `git push deploy master`
+4. App should be running after push. For later pushes app process will be restarted.

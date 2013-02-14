@@ -13,8 +13,8 @@ var tasks = {
     create: function (appname) {
         if (!appname) return
         // setup bare git repo
-        var repo = config.git + '/' + appname + '.git',
-            work = config.srv + '/' + appname
+        var repo = config.git_dir + '/' + appname + '.git',
+            work = config.srv_dir + '/' + appname
 
         if (fs.existsSync(repo)) {
             console.error('Error: a repo with that name already exists.')
@@ -24,7 +24,7 @@ var tasks = {
 
         exec('git --git-dir ' + repo + ' --bare init', function (err) {
             if (err) {
-                console.log(err)
+                console.error(err)
             } else {
                 console.log('create bare repo at ' + repo)
                 // add post-update hook
@@ -37,7 +37,7 @@ var tasks = {
         })
     },
 
-    'delete': function (appname) {
+    rm: function (appname) {
         if (!appname) return
         console.log('Really delete app \'' + appname + '\'? (y/n)')
         process.stdin.resume()
@@ -45,8 +45,8 @@ var tasks = {
         process.stdin.on('data', function (input) {
             process.stdin.pause()
             if (input === 'y\n') {
-                var repo = config.git + '/' + appname + '.git',
-                    work = config.srv + '/' + appname
+                var repo = config.git_dir + '/' + appname + '.git',
+                    work = config.srv_dir + '/' + appname
                 exec('rm -rf ' + repo + ' ' + work, function (err) {
                     if (err) {
                         console.error(err)
@@ -64,9 +64,13 @@ var tasks = {
         var repos,
             works,
             apps = []
-        exec('ls ' + config.git, function (err, stdout) {
+        exec('ls ' + config.git_dir, function (err, stdout) {
             repos = stdout.match(/\b.*\.git\b/g)
-            exec('ls ' + config.srv, function (err, stdout) {
+            if (!repos) {
+                console.log('No apps found.')
+                return
+            }
+            exec('ls ' + config.srv_dir, function (err, stdout) {
                 works = stdout.split(/\s+|\n/)
                 repos.forEach(function (r) {
                     var name = r.slice(0, -4)
@@ -94,14 +98,11 @@ var tasks = {
 
 }
 
-// alias delete to rm
-tasks.rm = tasks['delete']
-
 // Find user home first
 
 exec('whoami | echo ~', function (err, stdout) {
     userHome = stdout.replace(/\n/g, '')
-    configPath = userHome + '/.ngconfig'
+    configPath = userHome + '/.okconfig'
     if (fs.existsSync(configPath)) {
         // load existing config file
         config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
@@ -109,14 +110,14 @@ exec('whoami | echo ~', function (err, stdout) {
     } else {
         // otherwise init a new config
         config = {
-            git: userHome,
-            srv: userHome
+            git_dir: userHome,
+            srv_dir: userHome
         }
         writeConfig(function (err) {
             if (err) {
                 console.log(err)
             } else {
-                console.log('node-git: created new .ngconfig in ' + userHome)
+                console.log('created new .okconfig in ' + userHome)
                 logConfig()
                 doCommand(true)
             }
@@ -137,7 +138,7 @@ function doCommand (init) {
         tasks[command](args[1], args[2])
     } else {
         if (command) {
-            console.error('node-git: unknown command ' + command)
+            console.error('unknown command ' + command)
         }
     }
 
@@ -162,7 +163,7 @@ function createHook (appname, repo, work) {
 
     fs.writeFile(hook, data, function (err) {
         if (err) {
-            console.log(err)
+            console.error(err)
         } else {
             console.log('create post-update hook')
             exec('chmod a+x ' + hook)
@@ -223,12 +224,12 @@ function logConfig () {
 
 // attempt to sniff the port of the app
 function inspectApp (name) {
-    var appFile = config.srv + '/' + name + '/app.js'
+    var appFile = config.srv_dir + '/' + name + '/app.js'
     if (fs.existsSync(appFile)) {
         var content = fs.readFileSync(appFile, 'utf-8'),
             port = content.match(/\.listen\(([0-9]+)\)/)[1]
         return '- ' + name + ' (' + port + ')'
     } else {
-        return '- ' + name + ' (missing app.js)'
+        return '- ' + name
     }
 }

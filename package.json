@@ -1,5 +1,5 @@
 {
-    "name": "node-git",
+    "name": "ok",
     "version": "0.0.1",
     "author": "Evan You <yyx990803@gmail.com>",
     "description": "personal deployment tool for Linux + Node.js using git",
@@ -7,7 +7,7 @@
         "optimist": ">= 0.3.5"
     },
     "bin": {
-        "ng": "./bin/ng"
+        "ok": "./bin/ok"
     },
     "engines": {
         "node": ">= 0.8.x"
