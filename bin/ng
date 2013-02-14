@@ -53,22 +53,12 @@ var tasks = {
         
     },
 
-    proxy: function (port, domain) {
-
-    },
-
-    unproxy: function (port) {
-
-    },
-
     config: function (key, val) {
         if (!key) {
-            for (var op in config) {
-                console.log(op + ': ' + config[op])
-            }
+            logConfig()
             return
         }
-        if (config[key]) {
+        if (config[key] && val) {
             config[key] = val
             writeConfig()
         }
@@ -96,17 +86,21 @@ exec('whoami | echo ~', function (err, stdout) {
                 console.log(err)
             } else {
                 console.log('node-git: created new .ngconfig in ' + userHome)
-                console.log('  git: ' + userHome)
-                console.log('  srv: ' + userHome)
-                doCommand()
+                logConfig()
+                doCommand(true)
             }
         })
     }
 })
 
-function doCommand () {
+function doCommand (init) {
 
     var command = args[0]
+
+    if (!command && !init) {
+        logConfig()
+        return
+    }
 
     if (tasks[command]) {
         tasks[command](args[1], args[2])
@@ -188,4 +182,10 @@ function formatJSON (val) {
 
 function writeConfig (callback) {
     fs.writeFile(configPath, formatJSON(JSON.stringify(config)), callback)
+}
+
+function logConfig () {
+    for (var op in config) {
+        console.log(op + ': ' + config[op])
+    }
 }
