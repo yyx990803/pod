@@ -46,11 +46,40 @@ var tasks = {
                 var repo = config.git + '/' + appname + '.git',
                     work = config.srv + '/' + appname
                 exec('rm -rf ' + repo + ' ' + work, function (err) {
-                    console.log(err ? err : (appname + ' deleted.'))
+                    if (err) {
+                        console.error(err)
+                    } else {
+                        console.log('rm ' + repo)
+                        console.log('rm ' + work)
+                    }
                 })
             }
         })
         
+    },
+
+    list: function () {
+        var repos,
+            works,
+            apps = []
+        exec('ls ' + config.git, function (err, stdout) {
+            repos = stdout.match(/\b.*\.git\b/g)
+            exec('ls ' + config.srv, function (err, stdout) {
+                works = stdout.split('\n')
+                repos.forEach(function (r) {
+                    var name = r.slice(0, -4)
+                    if (works.indexOf(r) !== -1) {
+                        apps.push(inspectApp(name))
+                    }
+                })
+
+                // output
+                console.log('Existing apps:')
+                apps.forEach(function (a) {
+                    console.log(a)
+                })
+            })
+        })
     },
 
     config: function (key, val) {
@@ -187,5 +216,17 @@ function writeConfig (callback) {
 function logConfig () {
     for (var op in config) {
         console.log(op + ': ' + config[op])
+    }
+}
+
+// attempt to sniff the port of the app
+function inspectApp (name) {
+    var appFile = config.srv + '/' + name + '/app.js'
+    if (fs.existsSync(appFile)) {
+        var content = fs.readFileSync(appFile, 'utf-8'),
+            port = content.match(/\.listen\(([0-9]+)\)/)[1]
+        return '- ' + name + ' (' + port + ')'
+    } else {
+        return '- ' + name + ' (missing app.js)'
     }
 }
