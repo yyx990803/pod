@@ -11,6 +11,7 @@ var userHome,
 var tasks = {
 
     create: function (appname) {
+        if (!appname) return
         // setup bare git repo
         var repo = config.git + '/' + appname + '.git',
             work = config.srv + '/' + appname
@@ -37,6 +38,7 @@ var tasks = {
     },
 
     'delete': function (appname) {
+        if (!appname) return
         console.log('Really delete app \'' + appname + '\'? (y/n)')
         process.stdin.resume()
         process.stdin.setEncoding('utf8');
@@ -95,6 +97,9 @@ var tasks = {
     }
 
 }
+
+// alias delete to rm
+tasks.rm = tasks['delete']
 
 // Find user home first
 
