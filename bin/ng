@@ -43,6 +43,10 @@ var tasks = {
     },
 
     config: function (key, val) {
+        if (!key) {
+            console.log(config)
+            return
+        }
         if (config[key]) {
             config[key] = val
             fs.writeFile(__dirname + '/../config.json', formatJSON(JSON.stringify(config)))
