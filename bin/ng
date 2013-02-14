@@ -34,6 +34,11 @@ var tasks = {
         })
     },
 
+    remove: function (appname) {
+        exec('rm -rf ' + config.home + '/' + appname + '.git')
+        exec('rm -rf ' + config.srv + '/' + appname)
+    },
+
     proxy: function (port, domain) {
 
     },
