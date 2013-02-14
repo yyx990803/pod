@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-//
-
 var args = require('optimist').argv._,
     fs = require('fs'),
     exec = require('child_process').exec,
@@ -83,6 +81,7 @@ function editHook (appname, repo, work) {
             console.log(err)
         } else {
             console.log('create post-update hook')
+            exec('chmod a+x ' + hook)
         }
     })
 
