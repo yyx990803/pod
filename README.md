@@ -2,13 +2,15 @@
 
 A simple personal tool that simplifies the workflow of setting up and updating a new Node.js app on a Linux server with Git.
 Each project gets a bare Git repo that can be pushed to, and auto updates the working copy and restart the process with `forever` after a push.
-This is not on npm because it's probably a too personal use case. If you want to use it, simply clone it then `npm link`.
+This is not on npm because it's probably a too personal use case and very naive solution. If you want to use it, simply clone it then `(sudo) npm link`.
+
+**Note** - It's supposed to be on the server.
 
 ## Prerequisites
 
 Git
 Node.js
-[Forever](https://github.com/nodejitsu/forever)
+[Forever](https://github.com/nodejitsu/forever) - you can edit the post-update hook script in the source (`createHook()`) to remove this dependency.
 A user account with SSH access and proper privileges
 
 ## Commands
