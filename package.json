@@ -1,8 +1,8 @@
 {
     "name": "node-git",
     "version": "0.0.1",
-    "author": "evan",
-    "description": "personal deployment for Node.js + Varnish using git",
+    "author": "Evan You <yyx990803@gmail.com>",
+    "description": "personal deployment tool for Linux + Node.js using git",
     "dependencies": {
         "optimist": ">= 0.3.5"
     },

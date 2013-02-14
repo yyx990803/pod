@@ -85,11 +85,7 @@ var tasks = {
         })
     },
 
-    config: function (key, val) {
-        if (!key) {
-            logConfig()
-            return
-        }
+    set: function (key, val) {
         if (config[key] && val) {
             config[key] = val
             writeConfig()
