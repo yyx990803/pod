@@ -2,16 +2,23 @@
 
 var args = require('optimist').argv._,
     fs = require('fs'),
-    exec = require('child_process').exec,
-    config = require('../config.json')
+    exec = require('child_process').exec
+
+var userHome,
+    configPath,
+    config
 
 var tasks = {
 
     create: function (appname) {
         // setup bare git repo
-        var repo = config.home + '/' + appname + '.git',
+        var repo = config.git + '/' + appname + '.git',
             work = config.srv + '/' + appname
 
+        if (fs.existsSync(repo)) {
+            console.log('Error: a repo with that name already exists.')
+            return
+        }
         fs.mkdirSync(repo)
 
         exec('git --git-dir ' + repo + ' --bare init', function (err) {
@@ -22,20 +29,15 @@ var tasks = {
                 // edit post update hook
                 editHook(appname, repo, work)
                 // create working copy
-                exec('git clone ' + repo, function (err) {
-                    if (err) {
-                        console.log(err)
-                    } else {
-                        exec('mv ' + appname + ' ' + work)
-                        console.log('create empty working copy at ' + work)
-                    }
+                exec('git clone ' + repo + ' ' + work, function (err) {
+                    console.log(err ? err : 'create empty working copy at ' + work)
                 })
             }
         })
     },
 
-    remove: function (appname) {
-        exec('rm -rf ' + config.home + '/' + appname + '.git')
+    'delete': function (appname) {
+        exec('rm -rf ' + config.git + '/' + appname + '.git')
         exec('rm -rf ' + config.srv + '/' + appname)
     },
 
@@ -43,29 +45,64 @@ var tasks = {
 
     },
 
-    repo: function (appname) {
-        console.log('ssh://' + config.user + '@' + config.host + ':' + config.port + config.home + '/' + (appname || 'myapp') + '.git')
+    unproxy: function (port) {
+
     },
 
     config: function (key, val) {
         if (!key) {
-            console.log(config)
+            for (var op in config) {
+                console.log(op + ': ' + config[op])
+            }
             return
         }
         if (config[key]) {
             config[key] = val
-            fs.writeFile(__dirname + '/../config.json', formatJSON(JSON.stringify(config)))
+            writeConfig()
         }
     }
 
 }
 
-var command = args[0]
+// Find user home first
 
-if (tasks[command]) {
-    tasks[command](args[1], args[2])
-} else {
-    console.log('node-git: command "' + command + '" not found')
+exec('whoami | echo ~', function (err, stdout) {
+    userHome = stdout.replace(/\n/g, '')
+    configPath = userHome + '/.ngconfig'
+    if (fs.existsSync(configPath)) {
+        // load existing config file
+        config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+        doCommand()
+    } else {
+        // otherwise init a new config
+        config = {
+            git: userHome,
+            srv: userHome
+        }
+        writeConfig(function (err) {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log('Created new .ngconfig in ' + userHome)
+                console.log('git: ' + userHome)
+                console.log('srv: ' + userHome)
+                console.log('You can change them with \'ng config key val\'')
+                doCommand()
+            }
+        })
+    }
+})
+
+function doCommand () {
+
+    var command = args[0]
+
+    if (tasks[command]) {
+        tasks[command](args[1], args[2])
+    } else {
+        console.log('node-git: command "' + command + '" not found')
+    }
+
 }
 
 function editHook (appname, repo, work) {
@@ -134,4 +171,8 @@ function formatJSON (val) {
     }
     
     return retval
+}
+
+function writeConfig (callback) {
+    fs.writeFile(configPath, formatJSON(JSON.stringify(config)), callback)
 }
