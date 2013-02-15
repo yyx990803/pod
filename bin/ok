@@ -114,6 +114,32 @@ var tasks = {
             config[key] = val
             writeConfig()
         }
+    },
+
+    // proxy these to forever
+
+    start: function (appname) {
+
+    },
+
+    startall: function () {
+
+    },
+
+    restart: function (appname) {
+
+    },
+
+    restartall: function () {
+
+    },
+
+    stop: function (appname) {
+
+    },
+
+    stopall: function () {
+
     }
 
 }
@@ -246,6 +272,7 @@ function logConfig () {
 }
 
 // attempt to sniff the port of the app
+// TODO also check if they're running (forever list | grep ...)
 function inspectApp (name) {
     var appFile = config.srv_dir + '/' + name + '/app.js'
     if (fs.existsSync(appFile)) {
