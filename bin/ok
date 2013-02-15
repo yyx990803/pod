@@ -99,6 +99,15 @@ var tasks = {
                 if (!fs.existsSync(dir)) {
                     console.error('Error: path doesn\'t exist.')
                     return
+                } else {
+                    // TODO
+
+                    // changing git_dir should modify
+                    // the git remote origin of all existing apps
+
+                    // changing srv_dir should modify
+                    // the git pull cd location
+                    // in existing repo's hooks/post-update script
                 }
             }
 
