@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+// TODO
+// make .ok a folder
+// that contains a global config and individual info for all apps
+
 var fs      = require('fs'),
     exec    = require('child_process').exec,
     path    = require('path'),
@@ -98,7 +102,7 @@ var tasks = {
 
                     var withPort = inspectApp(app)
 
-                    if (stdout.match(app + '/app.js')) {
+                    if (stdout.match(new RegExp(config.srv_dir + '/' + app + '/app.js', 'i'))) {
                         output.push(withPort + ' - \u001b[32mrunning\u001b[0m')
                     } else {
                         output.push(withPort)
@@ -127,14 +131,18 @@ var tasks = {
                     console.error('Error: path doesn\'t exist.')
                     return
                 } else {
-                    // TODO
-
                     // changing git_dir should modify
                     // the git remote origin of all existing apps
+                    if (key === 'git_dir') {
+
+                    }
 
                     // changing srv_dir should modify
                     // the git pull cd location
                     // in existing repo's hooks/post-update script
+                    if (key === 'srv_dir') {
+
+                    }
                 }
             }
 
@@ -143,7 +151,7 @@ var tasks = {
         }
     },
 
-    // proxy these to forever
+    // proxy these to forever?
 
     start: function (appname) {
 
