@@ -1,0 +1,16 @@
+#!/bin/bash
+
+cd {{srv_dir}}
+unset GIT_DIR
+git pull
+
+npm install --production
+
+script='{{srv_dir}}/app.js'
+
+if forever list | grep $script
+then
+    forever restart $script
+else
+    NODE_ENV=production forever start $script
+fi

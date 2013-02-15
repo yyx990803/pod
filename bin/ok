@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-var args    = require('optimist').argv._,
-    fs      = require('fs'),
+var fs      = require('fs'),
     exec    = require('child_process').exec,
-    path    = require('path')
+    path    = require('path'),
+    argv    = require('optimist').argv
 
 var userHome,
     configPath,
-    config
+    config = {}
 
 var tasks = {
 
@@ -109,6 +109,8 @@ var tasks = {
 
 }
 
+
+
 // Find user home first
 
 exec('whoami | echo ~', function (err, stdout) {
@@ -138,7 +140,9 @@ exec('whoami | echo ~', function (err, stdout) {
 
 function doCommand (init) {
 
-    var command = args[0]
+    checkConfigOverride()
+
+    var command = argv._[0]
 
     if (!command && !init) {
         logConfig()
@@ -146,7 +150,7 @@ function doCommand (init) {
     }
 
     if (tasks[command]) {
-        tasks[command](args[1], args[2])
+        tasks[command](argv._[1], argv._[2])
     } else {
         if (command) {
             console.error('unknown command ' + command)
@@ -155,22 +159,27 @@ function doCommand (init) {
 
 }
 
+// options to override config file
+function checkConfigOverride () {
+
+    if (argv.git_dir && typeof argv.git_dir === 'string') {
+        console.log('using git_dir: ' + argv.git_dir);
+        config.git_dir = argv.git_dir
+    }
+
+    if (argv.srv_dir && typeof argv.srv_dir === 'string') {
+        console.log('using srv_dir: ' + argv.srv_dir);
+        config.srv_dir = argv.srv_dir
+    }
+
+}
+
 function createHook (appname, repo, work) {
 
     var hook = repo + '/hooks/post-update'
-    var data =
-        '#!/bin/bash\n'
-        + 'cd ' + work + '\n'
-        + 'unset GIT_DIR\n'
-        + 'git pull\n'
-        + 'npm install --production\n'
-        + 'script=\'' + work + '/app.js\'\n'
-        + 'if forever list | grep $script\n'
-        + 'then\n'
-        + '    forever restart $script\n'
-        + 'else\n'
-        + '    NODE_ENV=production forever start $script\n'
-        + 'fi'
+    var data = fs.readFileSync(__dirname + '/../hooks/post-update', 'utf-8')
+
+    data = data.replace(/\{\{srv_dir\}\}/g, work)
 
     fs.writeFile(hook, data, function (err) {
         if (err) {
