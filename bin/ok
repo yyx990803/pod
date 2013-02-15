@@ -68,58 +68,53 @@ var tasks = {
             works,
             apps = []
 
-        // list repos
-        exec('ls ' + config.git_dir, function (err, stdout) {
-            repos = stdout.match(/\b.*\.git\b/g)
-            if (!repos) {
-                console.log('No apps found.')
-                return
+        // get repos
+        repos = fs.readdirSync(config.git_dir).filter(function (r) {
+            return r.match(/\b.*\.git\b/g)
+        })
+
+        if (!repos) {
+            console.log('No apps found.')
+            return
+        }
+
+        // get working copies
+        works = fs.readdirSync(config.srv_dir)
+
+        // make sure an app has both the git repo and the working copy
+        repos.forEach(function (r) {
+            var name = r.slice(0, -4)
+            if (works.indexOf(name) !== -1) {
+                apps.push(name)
             }
+        })
 
-            // list working copies
-            exec('ls ' + config.srv_dir, function (err, stdout) {
+        // see if they are running
+        exec('forever list', function (err, stdout) {
+            if (!err) {
+                var output = []
 
-                works = stdout.split(/\s+|\n/)
+                apps.forEach(function (app) {
 
-                // make sure an app has both the git repo and the working copy
-                repos.forEach(function (r) {
-                    var name = r.slice(0, -4)
-                    if (name == 'node-git') return
-                    if (works.indexOf(name) !== -1) {
-                        apps.push(name)
-                    }
-                })
+                    var withPort = inspectApp(app)
 
-                // see if they are running
-                exec('forever list', function (err, stdout) {
-                    if (!err) {
-
-                        var output = []
-
-                        apps.forEach(function (app) {
-
-                            var withPort = inspectApp(app)
-
-                            if (stdout.match(app + '/app.js')) {
-                                output.push(withPort + ' - \u001b[32mrunning\u001b[0m')
-                            } else {
-                                output.push(withPort)
-                            }
-
-                        })
-
-                        // output
-                        console.log('Existing apps:')
-                        output.forEach(function (a) {
-                            console.log(a)
-                        })
-
+                    if (stdout.match(app + '/app.js')) {
+                        output.push(withPort + ' - \u001b[32mrunning\u001b[0m')
                     } else {
-                        console.error(err)
+                        output.push(withPort)
                     }
+
                 })
 
-            })
+                // output
+                console.log('Existing apps:')
+                output.forEach(function (a) {
+                    console.log(a)
+                })
+
+            } else {
+                console.error(err)
+            }
         })
     },
 

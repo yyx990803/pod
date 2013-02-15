@@ -40,8 +40,8 @@ Deletes the app. Will prompt before deleting.
 
     ok list
 
-Lists existing apps and attempts to sniff the port they're listening to.
-Note that it does this by simply checking if a repo and a working copy with the same name exists in `git_dir` and `srv_dir`.
+Lists existing apps and attempts to sniff the port they're listening to, and whether they're running.
+Note that it does this by first checking if a repo and a working copy with the same name exists in `git_dir` and `srv_dir`.
 
     ok set key val
 
