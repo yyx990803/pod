@@ -17,8 +17,8 @@ var tasks = {
         var repo = config.git_dir + '/' + appname + '.git',
             work = config.srv_dir + '/' + appname
 
-        if (fs.existsSync(repo)) {
-            console.error('Error: a repo with that name already exists.')
+        if (fs.existsSync(repo) || fs.existsSync(work)) {
+            console.error('Error: an app with that name already exists.')
             return
         }
         
@@ -63,30 +63,62 @@ var tasks = {
     },
 
     list: function () {
+
         var repos,
             works,
             apps = []
+
+        // list repos
         exec('ls ' + config.git_dir, function (err, stdout) {
             repos = stdout.match(/\b.*\.git\b/g)
             if (!repos) {
                 console.log('No apps found.')
                 return
             }
+
+            // list working copies
             exec('ls ' + config.srv_dir, function (err, stdout) {
+
                 works = stdout.split(/\s+|\n/)
+
+                // make sure an app has both the git repo and the working copy
                 repos.forEach(function (r) {
                     var name = r.slice(0, -4)
                     if (name == 'node-git') return
                     if (works.indexOf(name) !== -1) {
-                        apps.push(inspectApp(name))
+                        apps.push(name)
                     }
                 })
 
-                // output
-                console.log('Existing apps:')
-                apps.forEach(function (a) {
-                    console.log(a)
+                // see if they are running
+                exec('forever list', function (err, stdout) {
+                    if (!err) {
+
+                        var output = []
+
+                        apps.forEach(function (app) {
+
+                            var withPort = inspectApp(app)
+
+                            if (stdout.match(app + '/app.js')) {
+                                output.push(withPort + ' - \u001b[32mrunning\u001b[0m')
+                            } else {
+                                output.push(withPort)
+                            }
+
+                        })
+
+                        // output
+                        console.log('Existing apps:')
+                        output.forEach(function (a) {
+                            console.log(a)
+                        })
+
+                    } else {
+                        console.error(err)
+                    }
                 })
+
             })
         })
     },
@@ -148,7 +180,7 @@ var tasks = {
 
 // Find user home first
 
-exec('whoami | echo ~', function (err, stdout) {
+exec('echo $HOME', function (err, stdout) {
     userHome = stdout.replace(/\n/g, '')
     configPath = userHome + '/.okconfig'
     if (fs.existsSync(configPath)) {
@@ -276,6 +308,7 @@ function logConfig () {
 function inspectApp (name) {
     var appFile = config.srv_dir + '/' + name + '/app.js'
     if (fs.existsSync(appFile)) {
+        // sniff port
         var content = fs.readFileSync(appFile, 'utf-8'),
             port = content.match(/\.listen\(([0-9]+)\)/)[1]
         return '- ' + name + ' (' + port + ')'
