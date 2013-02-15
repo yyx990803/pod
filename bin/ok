@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-var args = require('optimist').argv._,
-    fs = require('fs'),
-    exec = require('child_process').exec
+var args    = require('optimist').argv._,
+    fs      = require('fs'),
+    exec    = require('child_process').exec,
+    path    = require('path')
 
 var userHome,
     configPath,
@@ -20,6 +21,7 @@ var tasks = {
             console.error('Error: a repo with that name already exists.')
             return
         }
+        
         fs.mkdirSync(repo)
 
         exec('git --git-dir ' + repo + ' --bare init', function (err) {
@@ -91,6 +93,15 @@ var tasks = {
 
     set: function (key, val) {
         if (config[key] && val) {
+            // test if path exists
+            if (key === 'git_dir' || key === 'srv_dir') {
+                var dir = path.resolve(process.cwd(), val)
+                if (!fs.existsSync(dir)) {
+                    console.error('Error: path doesn\'t exist.')
+                    return
+                }
+            }
+
             config[key] = val
             writeConfig()
         }
@@ -152,7 +163,7 @@ function createHook (appname, repo, work) {
         + 'cd ' + work + '\n'
         + 'unset GIT_DIR\n'
         + 'git pull\n'
-        + 'npm install\n'
+        + 'npm install --production\n'
         + 'script=\'' + work + '/app.js\'\n'
         + 'if forever list | grep $script\n'
         + 'then\n'
@@ -173,17 +184,16 @@ function createHook (appname, repo, work) {
 }
 
 function formatJSON (val) {
-    var retval = ''
-    var str = val
-    var pos = 0
-    var strLen = str.length
-    var indentStr = '    '
-    var newLine = '\n'
-    var char = ''
+    var retval = '',
+        str = val,
+        pos = 0,
+        strLen = str.length,
+        indentStr = '    ',
+        newLine = '\n',
+        char = ''
     
     for (var i=0; i<strLen; i++) {
         char = str.substring(i, i + 1)
-        
         if (char === '}' || char === ']') {
             retval = retval + newLine
             pos = pos - 1
@@ -192,23 +202,18 @@ function formatJSON (val) {
                 retval = retval + indentStr
             }
         }
-        
         if (char === ':') char = char + ' '
         retval = retval + char;
-        
         if (char === '{' || char === '[' || char === ',') {
             retval = retval + newLine
-            
             if (char === '{' || char === '[') {
                 pos = pos + 1
             }
-            
             for (var k=0; k<pos; k++) {
                 retval = retval + indentStr
             }
         }
     }
-    
     return retval
 }
 

@@ -6,6 +6,10 @@
     "dependencies": {
         "optimist": ">= 0.3.5"
     },
+    "devDependencies": {
+        "mocha": ">= 1.7.0",
+        "should": ">= 1.2.1"
+    },
     "bin": {
         "ok": "./bin/ok"
     },
