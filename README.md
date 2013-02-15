@@ -22,7 +22,7 @@ Prints config for current paths:
 - `git_dir`: the directory to hold your bare git repos (the remotes you push to)
 - `srv_dir`: the directory to hold your working copies
 
-You account should be able to read/write/execute in `git_dir` and read/write in `srv_dir`. The config file is `~/.ngconfig`. If no config file is found it will create a new one with both paths pointing to your home folder.
+You account should be able to read/write/execute in `git_dir` and read/write in `srv_dir`. The config file is `~/.okconfig`. If no config file is found it will create a new one with both paths pointing to your home folder.
 
     ok create appname
 
