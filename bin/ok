@@ -68,56 +68,32 @@ var tasks = {
 
     list: function () {
 
-        var repos,
-            works,
-            apps = []
-
-        // get repos
-        repos = fs.readdirSync(config.git_dir).filter(function (r) {
-            return r.match(/\b.*\.git\b/g)
-        })
-
-        if (!repos) {
-            console.log('No apps found.')
-            return
-        }
-
-        // get working copies
-        works = fs.readdirSync(config.srv_dir)
-
-        // make sure an app has both the git repo and the working copy
-        repos.forEach(function (r) {
-            var name = r.slice(0, -4)
-            if (works.indexOf(name) !== -1) {
-                apps.push(name)
-            }
-        })
+        var apps = findApps()
 
         // see if they are running
         exec('forever list', function (err, stdout) {
-            if (!err) {
+            if (err) {
+                console.err(err)
+            } else {
                 var output = []
 
                 apps.forEach(function (app) {
-
-                    var withPort = inspectApp(app)
-
+                    var port = sniffPort(app),
+                        status
                     if (stdout.match(new RegExp(config.srv_dir + '/' + app + '/app.js', 'i'))) {
-                        output.push(withPort + ' - \u001b[32mrunning\u001b[0m')
+                        status = ' - \u001b[32mON\u001b[0m'
                     } else {
-                        output.push(withPort)
+                        status = ' - \u001b[31mOFF\u001b[0m'
                     }
-
+                    output.push(app + port + status)
                 })
 
-                // output
-                console.log('Existing apps:')
+                console.log()
                 output.forEach(function (a) {
-                    console.log(a)
+                    console.log('- ' + a)
                 })
+                console.log()
 
-            } else {
-                console.error(err)
             }
         })
     },
@@ -306,16 +282,46 @@ function logConfig () {
     }
 }
 
+function findApps () {
+
+    var repos,
+        works,
+        apps = []
+
+    // get repos
+    repos = fs.readdirSync(config.git_dir).filter(function (r) {
+        return r.match(/\b.*\.git\b/g)
+    })
+
+    if (!repos) {
+        console.log('No apps found.')
+        return
+    }
+
+    // get working copies
+    works = fs.readdirSync(config.srv_dir)
+
+    // make sure an app has both the git repo and the working copy
+    repos.forEach(function (r) {
+        var name = r.slice(0, -4)
+        if (works.indexOf(name) !== -1) {
+            apps.push(name)
+        }
+    })
+
+    return apps
+}
+
 // attempt to sniff the port of the app
 // TODO also check if they're running (forever list | grep ...)
-function inspectApp (name) {
-    var appFile = config.srv_dir + '/' + name + '/app.js'
+function sniffPort (appname) {
+    var appFile = config.srv_dir + '/' + appname + '/app.js'
     if (fs.existsSync(appFile)) {
         // sniff port
         var content = fs.readFileSync(appFile, 'utf-8'),
             port = content.match(/\.listen\(([0-9]+)\)/)[1]
-        return '- ' + name + ' (' + port + ')'
+        return port ? (' : ' + port) : ''
     } else {
-        return '- ' + name
+        return ''
     }
 }
