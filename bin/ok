@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-// TODO
-// make .ok a folder
-// that contains a global config and individual info for all apps
-
 var fs      = require('fs'),
     exec    = require('child_process').exec,
     path    = require('path'),
-    argv    = require('optimist').argv
+    argv    = require('optimist').argv,
+    cwd     = process.cwd()
 
 var userHome,
     configPath,
@@ -18,11 +15,11 @@ var tasks = {
     create: function (appname) {
         if (!appname) return
         // setup bare git repo
-        var repo = config.git_dir + '/' + appname + '.git',
-            work = config.srv_dir + '/' + appname
+        var repo = config.dir + '/repos/' + appname + '.git',
+            work = config.dir + '/apps/' + appname
 
         if (fs.existsSync(repo) || fs.existsSync(work)) {
-            console.error('Error: an app with that name already exists.')
+            warn('an app with that name already exists.')
             return
         }
         
@@ -30,32 +27,40 @@ var tasks = {
 
         exec('git --git-dir ' + repo + ' --bare init', function (err) {
             if (err) {
-                console.error(err)
+                warn(err)
             } else {
                 console.log('create bare repo at ' + repo)
                 // add post-update hook
                 createHook(appname, repo, work)
                 // create working copy
                 exec('git clone ' + repo + ' ' + work, function (err) {
-                    console.log(err ? err : 'create empty working copy at ' + work)
+                    if (err) {
+                        warn(err)
+                    } else {
+                        console.log('create empty working copy at ' + work)
+                    }
                 })
             }
         })
     },
 
     rm: function (appname) {
+
         if (!appname) return
-        console.log('Really delete app \'' + appname + '\'? (y/n)')
-        process.stdin.resume()
-        process.stdin.setEncoding('utf8');
-        process.stdin.on('data', function (input) {
-            process.stdin.pause()
-            if (input === 'y\n') {
-                var repo = config.git_dir + '/' + appname + '.git',
-                    work = config.srv_dir + '/' + appname
+
+        var repo = config.dir + '/repos/' + appname + '.git',
+            work = config.dir + '/apps/' + appname
+
+        if (!fs.existsSync(repo) && !fs.existsSync(work)) {
+            warn('app does not exist')
+            return
+        }
+
+        prompt('Really delete app \'' + appname + '\'? (y/n)', function (res) {
+            if (res === 'y') {
                 exec('rm -rf ' + repo + ' ' + work, function (err) {
                     if (err) {
-                        console.error(err)
+                        warn(err)
                     } else {
                         console.log('rm ' + repo)
                         console.log('rm ' + work)
@@ -80,7 +85,7 @@ var tasks = {
                 apps.forEach(function (app) {
                     var port = sniffPort(app),
                         status
-                    if (stdout.match(new RegExp(config.srv_dir + '/' + app + '/app.js', 'i'))) {
+                    if (stdout.match(new RegExp(config.dir + '/apps/' + app + '/app.js', 'i'))) {
                         status = ' - \u001b[32mON\u001b[0m'
                     } else {
                         status = ' - \u001b[31mOFF\u001b[0m'
@@ -88,11 +93,9 @@ var tasks = {
                     output.push(app + port + status)
                 })
 
-                console.log()
                 output.forEach(function (a) {
-                    console.log('- ' + a)
+                    console.log('⚑ ' + a)
                 })
-                console.log()
 
             }
         })
@@ -101,24 +104,11 @@ var tasks = {
     set: function (key, val) {
         if (config[key] && val) {
             // test if path exists
-            if (key === 'git_dir' || key === 'srv_dir') {
-                var dir = path.resolve(process.cwd(), val)
-                if (!fs.existsSync(dir)) {
-                    console.error('Error: path doesn\'t exist.')
+            if (key === 'dir') {
+                var dir = path.resolve(cwd, val)
+                if (!fs.existsSync(dir) || !isDir(dir)) {
+                    warn('invalid directory path.')
                     return
-                } else {
-                    // changing git_dir should modify
-                    // the git remote origin of all existing apps
-                    if (key === 'git_dir') {
-
-                    }
-
-                    // changing srv_dir should modify
-                    // the git pull cd location
-                    // in existing repo's hooks/post-update script
-                    if (key === 'srv_dir') {
-
-                    }
                 }
             }
 
@@ -130,34 +120,36 @@ var tasks = {
     // proxy these to forever?
 
     start: function (appname) {
-
+        if (!appname) return
+        console.log(appname)
     },
 
     startall: function () {
-
+        var apps = findApps()
+        apps.forEach(tasks.start)
     },
 
     restart: function (appname) {
-
+        if (!appname) return
     },
 
     restartall: function () {
-
+        exec('forever restartall', handle)
     },
 
     stop: function (appname) {
-
+        if (!appname) return
     },
 
     stopall: function () {
-
+        exec('forever stopall', handle)
     }
 
 }
 
 
 
-// Find user home first
+// INIT
 
 exec('echo $HOME', function (err, stdout) {
     userHome = stdout.replace(/\n/g, '')
@@ -168,29 +160,41 @@ exec('echo $HOME', function (err, stdout) {
         doCommand()
     } else {
         // otherwise init a new config
-        config = {
-            git_dir: userHome,
-            srv_dir: userHome
-        }
-        writeConfig(function (err) {
-            if (err) {
-                console.log(err)
+        console.log('No .okconfig found.')
+
+        prompt('Where do you want OK to keep all its stuff?', function (res) {
+            res = path.resolve(cwd, res)
+            if (fs.existsSync(res) && isDir(res)) {
+                config.dir = res
+                writeConfig(function () {
+                    console.log('created new .okconfig in ' + userHome)
+                    makeDirs()
+                    doCommand()
+                })
             } else {
-                console.log('created new .okconfig in ' + userHome)
-                logConfig()
-                doCommand(true)
+                console.log('invalid path.')
             }
         })
+        
+        
+                    
     }
 })
 
-function doCommand (init) {
+function makeDirs () {
+    var apps = config.dir + '/apps',
+        repos = config.dir + '/repos'
+        logs = config.dir + '/logs'
+    if (!fs.existsSync(apps)) fs.mkdirSync(apps)
+    if (!fs.existsSync(repos)) fs.mkdirSync(repos)
+    if (!fs.existsSync(logs)) fs.mkdirSync(logs)
+}
 
-    checkConfigOverride()
+function doCommand () {
 
     var command = argv._[0]
 
-    if (!command && !init) {
+    if (!command) {
         logConfig()
         return
     }
@@ -199,40 +203,25 @@ function doCommand (init) {
         tasks[command](argv._[1], argv._[2])
     } else {
         if (command) {
-            console.error('unknown command ' + command)
+            warn('unknown command ' + command)
         }
     }
 
 }
 
-// options to override config file
-function checkConfigOverride () {
-
-    if (argv.git_dir && typeof argv.git_dir === 'string') {
-        console.log('using git_dir: ' + argv.git_dir);
-        config.git_dir = argv.git_dir
-    }
-
-    if (argv.srv_dir && typeof argv.srv_dir === 'string') {
-        console.log('using srv_dir: ' + argv.srv_dir);
-        config.srv_dir = argv.srv_dir
-    }
-
-}
-
+// TODO make this read all existing hooks in ../hooks
 function createHook (appname, repo, work) {
 
     var hook = repo + '/hooks/post-update'
     var data = fs.readFileSync(__dirname + '/../hooks/post-update', 'utf-8')
 
-    data = data.replace(/\{\{srv_dir\}\}/g, work)
+    data = data.replace(/\{\{app_dir\}\}/g, work)
 
     fs.writeFile(hook, data, function (err) {
         if (err) {
-            console.error(err)
+            warn(err)
         } else {
-            console.log('create post-update hook')
-            exec('chmod a+x ' + hook)
+            fs.chmodSync(hook, '0777')
         }
     })
 
@@ -273,7 +262,13 @@ function formatJSON (val) {
 }
 
 function writeConfig (callback) {
-    fs.writeFile(configPath, formatJSON(JSON.stringify(config)), callback)
+    fs.writeFile(configPath, formatJSON(JSON.stringify(config)), function (err) {
+        if (err) {
+            warn(err)
+        } else {
+            if (callback) callback()
+        }
+    })
 }
 
 function logConfig () {
@@ -289,7 +284,7 @@ function findApps () {
         apps = []
 
     // get repos
-    repos = fs.readdirSync(config.git_dir).filter(function (r) {
+    repos = fs.readdirSync(config.dir + '/repos').filter(function (r) {
         return r.match(/\b.*\.git\b/g)
     })
 
@@ -299,7 +294,7 @@ function findApps () {
     }
 
     // get working copies
-    works = fs.readdirSync(config.srv_dir)
+    works = fs.readdirSync(config.dir + '/apps')
 
     // make sure an app has both the git repo and the working copy
     repos.forEach(function (r) {
@@ -312,10 +307,8 @@ function findApps () {
     return apps
 }
 
-// attempt to sniff the port of the app
-// TODO also check if they're running (forever list | grep ...)
 function sniffPort (appname) {
-    var appFile = config.srv_dir + '/' + appname + '/app.js'
+    var appFile = config.dir + '/apps/' + appname + '/app.js'
     if (fs.existsSync(appFile)) {
         // sniff port
         var content = fs.readFileSync(appFile, 'utf-8'),
@@ -324,4 +317,28 @@ function sniffPort (appname) {
     } else {
         return ''
     }
+}
+
+function warn (msg) {
+    console.warn('\u001b[31mERR\u001b[0m - ' + msg)
+}
+
+function handle (err, stdout, stderr) {
+    if (err) warn(err)
+    if (stderr) warn(stderr)
+    console.log(stdout)
+}
+
+function prompt (msg, callback) {
+    console.log(msg)
+    process.stdin.resume()
+    process.stdin.setEncoding('utf8')
+    process.stdin.on('data', function (input) {
+        process.stdin.pause()
+        callback(input.replace(/\n/g, ''))
+    })
+}
+
+function isDir (path) {
+    return fs.statSync(path).isDirectory()
 }

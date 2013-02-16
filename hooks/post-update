@@ -1,12 +1,12 @@
 #!/bin/bash
 
-cd {{srv_dir}}
+cd {{app_dir}}
 unset GIT_DIR
 git pull
 
 npm install --production
 
-script='{{srv_dir}}/app.js'
+script='{{app_dir}}/app.js'
 
 if forever list | grep $script
 then

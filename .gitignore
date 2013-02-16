@@ -1,4 +1,5 @@
 .DS_Store
 node_modules
-test/git
-test/srv
+test/apps
+test/logs
+test/repos
