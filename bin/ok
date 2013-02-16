@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// TODO use forever-monitor programatically!!
 
 var fs      = require('fs'),
     exec    = require('child_process').exec,
@@ -8,23 +9,34 @@ var fs      = require('fs'),
 
 var userHome,
     configPath,
-    config = {}
+    config = {},
+    runningStatus = null
 
 var tasks = {
 
     create: function (appname) {
         if (!appname) return
-        // setup bare git repo
+        
         var repo = config.dir + '/repos/' + appname + '.git',
-            work = config.dir + '/apps/' + appname
+            work = config.dir + '/apps/' + appname,
+            log = config.dir + '/logs/' + appname
 
         if (fs.existsSync(repo) || fs.existsSync(work)) {
             warn('an app with that name already exists.')
             return
         }
-        
-        fs.mkdirSync(repo)
 
+        // create log folder
+        fs.mkdir(log, function (err) {
+            if (err) {
+                warn(err)
+            } else {
+                console.log('create logs dir at' + log)
+            }
+        })
+        
+        // setup bare git repo
+        fs.mkdirSync(repo)
         exec('git --git-dir ' + repo + ' --bare init', function (err) {
             if (err) {
                 warn(err)
@@ -42,6 +54,7 @@ var tasks = {
                 })
             }
         })
+
     },
 
     rm: function (appname) {
@@ -49,7 +62,8 @@ var tasks = {
         if (!appname) return
 
         var repo = config.dir + '/repos/' + appname + '.git',
-            work = config.dir + '/apps/' + appname
+            work = config.dir + '/apps/' + appname,
+            log = config.dir + '/logs/' + appname
 
         if (!fs.existsSync(repo) && !fs.existsSync(work)) {
             warn('app does not exist')
@@ -58,12 +72,13 @@ var tasks = {
 
         prompt('Really delete app \'' + appname + '\'? (y/n)', function (res) {
             if (res === 'y') {
-                exec('rm -rf ' + repo + ' ' + work, function (err) {
+                // stop it first
+                tasks.stop(appname)
+                exec('rm -rf ' + repo + ' ' + work + ' ' + log, function (err) {
                     if (err) {
                         warn(err)
                     } else {
-                        console.log('rm ' + repo)
-                        console.log('rm ' + work)
+                        console.log('Deleted app: ' + appname)
                     }
                 })
             }
@@ -75,10 +90,15 @@ var tasks = {
 
         var apps = findApps()
 
+        if (!apps.length) {
+            console.log('No apps found.')
+            return
+        }
+
         // see if they are running
         exec('forever list', function (err, stdout) {
             if (err) {
-                console.err(err)
+                warn(err)
             } else {
                 var output = []
 
@@ -117,11 +137,31 @@ var tasks = {
         }
     },
 
-    // proxy these to forever?
+    // proxy these to forever
 
     start: function (appname) {
         if (!appname) return
-        console.log(appname)
+
+        var script = config.dir + '/apps/' + appname + '/app.js',
+            logDir = config.dir + '/logs/' + appname
+
+        if (!fs.existsSync(script)) {
+            warn('app.js not found.')
+            return
+        }
+
+        // have to make sure it's running only once
+        // forever -m 1 seems to have problems
+        exec('forever list | grep ' + script, function (err, stdout) {
+            if (err && err.code === 1) {
+                exec('NODE_ENV=production forever start -a -m 5'
+                    + '-l ' + logDir + '/forever.log '
+                    + '-o ' + logDir + '/stdout.log '
+                    + script, handle)
+            } else {
+                console.log(appname + ' already running.')
+            }
+        })
     },
 
     startall: function () {
@@ -131,6 +171,8 @@ var tasks = {
 
     restart: function (appname) {
         if (!appname) return
+        var script = config.dir + '/apps/' + appname + '/app.js'
+        exec('forever restart ' + script, handle)
     },
 
     restartall: function () {
@@ -139,6 +181,8 @@ var tasks = {
 
     stop: function (appname) {
         if (!appname) return
+        var script = config.dir + '/apps/' + appname + '/app.js'
+        exec('forever stop ' + script, handle)
     },
 
     stopall: function () {
@@ -215,7 +259,9 @@ function createHook (appname, repo, work) {
     var hook = repo + '/hooks/post-update'
     var data = fs.readFileSync(__dirname + '/../hooks/post-update', 'utf-8')
 
-    data = data.replace(/\{\{app_dir\}\}/g, work)
+    data = data
+        .replace(/\{\{ok_dir\}\}/g, config.dir)
+        .replace(/\{\{app\}\}/g, appname)
 
     fs.writeFile(hook, data, function (err) {
         if (err) {
@@ -320,12 +366,12 @@ function sniffPort (appname) {
 }
 
 function warn (msg) {
-    console.warn('\u001b[31mERR\u001b[0m - ' + msg)
+    console.warn('\u001b[31merror\u001b[0m:   ' + msg)
 }
 
 function handle (err, stdout, stderr) {
     if (err) warn(err)
-    if (stderr) warn(stderr)
+    if (stderr) console.log(stderr)
     console.log(stdout)
 }
 

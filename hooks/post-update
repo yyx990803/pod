@@ -1,16 +1,19 @@
 #!/bin/bash
 
-cd {{app_dir}}
+cd {{ok_dir}}/apps/{{app}}
 unset GIT_DIR
 git pull
 
 npm install --production
 
-script='{{app_dir}}/app.js'
+script='{{ok_dir}}/apps/{{app}}/app.js'
 
 if forever list | grep $script
 then
     forever restart $script
 else
-    NODE_ENV=production forever start $script
+    NODE_ENV=production forever start -a -m 5 \
+        -l {{ok_dir}}/logs/{{app}}/forever.log \
+        -o {{ok_dir}}/logs/{{app}}/stdout.log \
+        $script
 fi
