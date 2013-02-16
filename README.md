@@ -1,7 +1,7 @@
 # OK
 
-A simple personal tool that simplifies the workflow of setting up and updating a new Node.js app on a Linux server with Git.
-Each project gets a bare Git repo that can be pushed to, and auto updates the working copy and restart the process with `forever` after a push.
+A simple personal tool that simplifies the workflow of setting up and updating a new Node.js app on a Linux server with Git.  
+Each project gets a bare Git repo that can be pushed to, and auto updates the working copy and restart the process with `forever` after a push.  
 This is not on npm because it's probably a too personal use case and very naive solution. If you want to use it, simply clone it then `(sudo) npm link`.
 
 **Note** - It's supposed to be used on the server.
@@ -15,37 +15,69 @@ This is not on npm because it's probably a too personal use case and very naive 
 
 ## Commands
 
-    ok
+```
+ok
+```
 
-Prints config for current paths:
+Prints the directory OK uses to keep stuff. If no config file is found it will create `~/.okconfig`, and ask you to enter a directory. You account should be able to read/write/execute in the directory. OK will create 3 directories in it:
 
-- `git_dir`: the directory to hold your bare git repos (the remotes you push to)
-- `srv_dir`: the directory to hold your working copies
+- `repos`: the directory to hold your bare git repos (the remotes you push to)
+- `apps`: the directory to hold your working copies
+- `logs`: the directory to hold logs.
 
-You account should be able to read/write/execute in `git_dir` and read/write in `srv_dir`. The config file is `~/.okconfig`. If no config file is found it will create a new one with both paths pointing to your home folder.
+---
 
-    ok create appname
+```
+ok create appname
+```
 
-Sets up a bare git repo `appname.git` in `git_dir`, then adds a post-update hook that does:
+- sets up a bare git repo `appname.git` in `repos`, then adds a post-update hook that does:
 
-- git pull
-- npm install
-- start/restart the process with forever
+    - git pull
+    - npm install
+    - start/restart the process with forever
 
-Finally creates an empty working copy in `srv_dir` using `git clone`.
+- creates an empty working copy in `apps` using `git clone`.
+- creates a folder in `logs` that logs the process' stdout and errors from Forever.
 
-    ok rm appname
+---
+
+```
+ok rm appname
+```
 
 Deletes the app. Will prompt before deleting.
 
-    ok list
+---
 
-Lists existing apps and attempts to sniff the port they're listening to, and whether they're running.
-Note that it does this by first checking if a repo and a working copy with the same name exists in `git_dir` and `srv_dir`.
+```
+ok list
+```
 
-    ok set key val
+Lists existing apps and attempts to sniff the port they're listening to, and whether they're currently running.
 
-Sets the config path, e.g. `ok set srv_dir /srv`.
+---
+
+```
+ok set dir path
+```
+
+Sets the config path.
+
+---
+
+```
+ok start appname
+ok stop appname
+ok restart appname
+ok startall
+ok stopall
+ok restartall
+```
+
+These simply proxies the command to Forever.
+
+---
 
 ## Workflow
 
@@ -56,6 +88,6 @@ Sets the config path, e.g. `ok set srv_dir /srv`.
 ### In your local repo
 
 1. Make sure your main file is named `app.js`
-2. `git remote add deploy ssh://username@host[:port]/git_dir/myapp.git`
+2. `git remote add deploy ssh://username@host[:port]/repos/myapp.git`
 3. `git push deploy master`
 4. App should be running after push. For later pushes app process will be restarted.
