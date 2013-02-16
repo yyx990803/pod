@@ -13,8 +13,8 @@ OK simplifies the workflow of setting up, updating and managing multiple Node.js
 
 ## Commands
 
-```
-ok
+``` bash
+$ ok
 ```
 
 Prints the directory OK uses to keep stuff. If no config file is found it will create `~/.okconfig`, and ask you to enter a directory. You account should be able to read/write/execute in the directory. OK will create 3 directories in it:
@@ -25,8 +25,8 @@ Prints the directory OK uses to keep stuff. If no config file is found it will c
 
 ---
 
-```
-ok create appname
+``` bash
+$ ok create appname
 ```
 
 - sets up a bare git repo `appname.git` in `repos`, then adds a post-update hook that does: (cutomizable in `hooks/post-update`)
@@ -40,37 +40,37 @@ ok create appname
 
 ---
 
-```
-ok rm appname
+``` bash
+$ ok rm appname
 ```
 
 Deletes the app. Will prompt before deleting.
 
 ---
 
-```
-ok list
+``` bash
+$ ok list
 ```
 
 Lists existing apps and attempts to sniff the port they're listening to, and whether they're currently running.
 
 ---
 
-```
-ok set dir path
+``` bash
+$ ok set dir path
 ```
 
 Sets the config path.
 
 ---
 
-```
-ok start appname
-ok stop appname
-ok restart appname
-ok startall
-ok stopall
-ok restartall
+``` bash
+$ ok start appname
+$ ok stop appname
+$ ok restart appname
+$ ok startall
+$ ok stopall
+$ ok restartall
 ```
 
 These simply proxies the commands to `forever`.
@@ -85,13 +85,13 @@ Make sure your app's main file is named `app.js`.
 
 1. `ok create myapp`
 
-### In your local repo
+### Start a new local repo
 
 1. `git clone ssh://username@host[:port]/ok_dir/repos/myapp.git`
 2. hack hack hack, commit
 3. `git push`
 
-Or for existing repo:
+### Or use an existing repo:
 
 1. `git remote add deploy ssh://username@host[:port]/ok_dir/repos/myapp.git`
 2. `git push deploy master`
