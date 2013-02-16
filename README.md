@@ -2,7 +2,7 @@
 
 ### Simple Server Side Deployment Tool for Node.js
 
-OK simplifies the workflow of setting up, updating and managing Node.js apps on a Linux server. Each project gets a bare Git repo that can be pushed to, and auto updates the working copy and restart the process with `forever` after a push. This is not on npm because it's probably a too personal use case and very premature. If you want to use it, simply clone it then `(sudo) npm link`.
+OK simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server. Each project gets a bare Git repo that can be pushed to, and auto updates the working copy and restart the process with `forever` after a push. This is not on npm because it's probably a too personal use case and very premature. If you want to use it, simply clone it then `(sudo) npm link`.
 
 ## Prerequisites
 
@@ -79,13 +79,21 @@ These simply proxies the commands to `forever`.
 
 ## Workflow
 
+Make sure your app's main file is named `app.js`.
+
 ### On the server
 
 1. `ok create myapp`
 
 ### In your local repo
 
-1. Make sure your main file is named `app.js`
-2. `git remote add deploy ssh://username@host[:port]/ok_dir/repos/myapp.git`
-3. `git push deploy master`
-4. App should be running after push. For later pushes app process will be restarted.
+1. `git clone ssh://username@host[:port]/ok_dir/repos/myapp.git`
+2. hack hack hack, commit
+3. `git push`
+
+Or for existing repo:
+
+1. `git remote add deploy ssh://username@host[:port]/ok_dir/repos/myapp.git`
+2. `git push deploy master`
+
+App should be automatically running after push. For later pushes app process will be restarted.
