@@ -29,7 +29,7 @@ Prints the directory OK uses to keep stuff. If no config file is found it will c
 ok create appname
 ```
 
-- sets up a bare git repo `appname.git` in `repos`, then adds a post-update hook that does:
+- sets up a bare git repo `appname.git` in `repos`, then adds a post-update hook that does: (cutomizable in `hooks/post-update`)
 
     - git pull
     - npm install
@@ -86,6 +86,6 @@ These simply proxies the commands to `forever`.
 ### In your local repo
 
 1. Make sure your main file is named `app.js`
-2. `git remote add deploy ssh://username@host[:port]/repos/myapp.git`
+2. `git remote add deploy ssh://username@host[:port]/ok_dir/repos/myapp.git`
 3. `git push deploy master`
 4. App should be running after push. For later pushes app process will be restarted.
