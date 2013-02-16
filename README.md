@@ -1,16 +1,14 @@
 # OK
 
-A simple personal tool that simplifies the workflow of setting up and updating a new Node.js app on a Linux server with Git.  
-Each project gets a bare Git repo that can be pushed to, and auto updates the working copy and restart the process with `forever` after a push.  
-This is not on npm because it's probably a too personal use case and very naive solution. If you want to use it, simply clone it then `(sudo) npm link`.
+### Simple Server Side Deployment Tool for Node.js
 
-**Note** - It's supposed to be used on the server.
+OK simplifies the workflow of setting up, updating and managing Node.js apps on a Linux server. Each project gets a bare Git repo that can be pushed to, and auto updates the working copy and restart the process with `forever` after a push. This is not on npm because it's probably a too personal use case and very premature. If you want to use it, simply clone it then `(sudo) npm link`.
 
 ## Prerequisites
 
 - Git
 - Node.js
-- [Forever](https://github.com/nodejitsu/forever) - you can edit `hooks/post-update` to remove this dependency.
+- [Forever](https://github.com/nodejitsu/forever) - currently it needs to be installed globally. Planning to switch to using only the monitor module instead of CLI.
 - A user account with SSH access and proper privileges
 
 ## Commands
@@ -38,7 +36,7 @@ ok create appname
     - start/restart the process with forever
 
 - creates an empty working copy in `apps` using `git clone`.
-- creates a folder in `logs` that logs the process' stdout and errors from Forever.
+- creates a folder in `logs` that logs the process' stdout and errors from `forever`.
 
 ---
 
@@ -75,7 +73,7 @@ ok stopall
 ok restartall
 ```
 
-These simply proxies the command to Forever.
+These simply proxies the commands to `forever`.
 
 ---
 
