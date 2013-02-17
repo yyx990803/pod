@@ -7,7 +7,7 @@ var fs      = require('fs'),
     colors  = require('colors'),
     cwd     = process.cwd()
 
-var forever, // lazy load
+var forever, // lazy load so commands that doesn't need it runs faster
     foreverTasks = [
         'rm',
         'list',
