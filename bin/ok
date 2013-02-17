@@ -33,7 +33,7 @@ var usage = '\n'
     + '\n'
     + '    create <appname>        Create a new app\n'
     + '    rm <appname>            Delete an app\n'
-    + '    cleanlog <appname>      Clean up logs for an app\n'
+    + '    cleanlogs <appname>     Clean up logs for an app\n'
     + '    list [-p]               List apps and status. [-p] = List processes\n'
     + '    config                  Print current config options\n'
     + '    set <key> <val>         Set a config option\n'
@@ -130,7 +130,7 @@ var ok = {
         
     },
 
-    cleanlog: function (appname) {
+    cleanlogs: function (appname) {
         var logDir = logDir = config.dir + '/logs/' + appname
         if (!fs.existsSync(logDir)) {
             warn('cannot find log directory for ' + appname)
