@@ -13,7 +13,7 @@ If you want to try it out, simply clone it then `(sudo) npm link`.
 
 ```
 
-  Usage: ok [command] [options]
+  Usage: ok [command]
 
   Commands:
 
