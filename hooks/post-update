@@ -1,9 +1,7 @@
 #!/bin/bash
 
-cd {{ok_dir}}/apps/{{app}}
+cd {{pod_dir}}/apps/{{app}}
 env -i git pull
-
 npm install --production
-
-ok cleanlogs {{app}}
-ok restart {{app}}
+pod cleanlogs {{app}}
+pod restart {{app}}

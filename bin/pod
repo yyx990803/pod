@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-process.env.NODE_ENV = 'production'
-
 var fs      = require('fs'),
     exec    = require('child_process').exec,
     path    = require('path'),
@@ -23,32 +21,31 @@ var forever, // lazy load so commands that doesn't need it runs faster
     ]
 
 var config = {},
-    configPath = process.env.HOME + '/.okconfig'
+    configPath = process.env.HOME + '/.podconfig'
 
-var usage = '\n'
-    + ('  OK version ' + require('../package.json').version + '\n').cyan
-    + '\n'
-    + '  Usage: ok [command] [options]\n'
-    + '\n'
-    + '  Commands:\n'
-    + '\n'
-    + '    create <appname>        Create a new app\n'
-    + '    rm <appname>            Delete an app\n'
-    + '    cleanlogs <appname>     Clean up logs for an app\n'
-    + '    list [-p]               List apps and status. [-p] = List processes\n'
-    + '    config                  Print current config options\n'
-    + '    set <key> <val>         Set a config option\n'
-    + '    start <appname>         Start an app with forever\n'
-    + '    stop <appname>          Stop an app\n'
-    + '    restart <appname>       Restart an app, start if not already running\n'
-    + '    startall                Start all apps not already running\n'
-    + '    stopall                 Stop all apps\n'
-    + '    restartall              Restart all running apps\n'
-    + '    help                    You are reading it right now\n'
-
-var ok = {
+var pod = {
 
     help: function () {
+        var usage = '\n'
+            + ('  Pod - version ' + require('../package.json').version + '\n').cyan
+            + '\n'
+            + '  Usage: pod [command] [options]\n'
+            + '\n'
+            + '  Commands:\n'
+            + '\n'
+            + '    create <appname>        Create a new app\n'
+            + '    rm <appname>            Delete an app\n'
+            + '    cleanlogs <appname>     Clean up logs for an app\n'
+            + '    list [-p]               List apps and status. [-p] = List processes\n'
+            + '    config                  Print current config options\n'
+            + '    set <key> <val>         Set a config option\n'
+            + '    start <appname>         Start an app with forever\n'
+            + '    stop <appname>          Stop an app\n'
+            + '    restart <appname>       Restart an app, start if not already running\n'
+            + '    startall                Start all apps not already running\n'
+            + '    stopall                 Stop all apps\n'
+            + '    restartall              Restart all running apps\n'
+            + '    help                    You are reading it right now\n'
         console.log(usage)
     },
 
@@ -75,7 +72,7 @@ var ok = {
             if (err) {
                 console.error(err)
             } else {
-                log('create logs dir at' + logDir)
+                log('create logs dir at ' + logDir.yellow)
             }
         })
         
@@ -85,7 +82,7 @@ var ok = {
             if (err) {
                 warn(err)
             } else {
-                log('create bare repo at ' + repo)
+                log('create bare repo at ' + repo.yellow)
                 // add post-update hook
                 createHook(appname, repo, work)
                 // create working copy
@@ -93,7 +90,7 @@ var ok = {
                     if (err) {
                         warn(err)
                     } else {
-                        log('create empty working copy at ' + work)
+                        log('create empty working copy at ' + work.yellow)
                     }
                 })
             }
@@ -117,7 +114,7 @@ var ok = {
         prompt('Really delete app \'' + appname + '\'? (y/n)', function (res) {
             if (res === 'y') {
                 // stop it first
-                ok.stop(appname)
+                pod.stop(appname)
                 // fs.rmdir can't -rf
                 exec('rm -rf ' + repo + ' ' + work + ' ' + logDir, function (err) {
                     if (err) {
@@ -275,7 +272,7 @@ var ok = {
 
         runner.on('error', function () {
             log(appname + ' is not running, starting instead...')
-            ok.start(appname)
+            pod.start(appname)
         })
 
     },
@@ -291,7 +288,7 @@ var ok = {
                     return
                 }
                 apps.forEach(function (app) {
-                    ok.start(app, list)
+                    pod.start(app, list)
                 })      
             }
         })
@@ -345,7 +342,7 @@ if (fs.existsSync(configPath)) {
     parseCommand()
 } else {
     // otherwise init a new config
-    console.log('No .okconfig found.')
+    console.log('No .podconfig found.')
     initConfig()
 }
 
@@ -355,7 +352,7 @@ function initConfig () {
         if (fs.existsSync(res) && isDir(res)) {
             config.dir = res
             writeConfig(function () {
-                log('created new .okconfig in ' + process.env.HOME)
+                log('created new .podconfig in ' + process.env.HOME)
                 makeDirs()
                 parseCommand()
             })
@@ -379,11 +376,11 @@ function parseCommand () {
 
     var command = argv._[0] || 'help'
 
-    if (ok[command]) {
+    if (pod[command]) {
         if (foreverTasks.indexOf(command) !== -1) {
             forever = require('forever/lib/forever')
         }
-        ok[command](argv._[1], argv._[2])
+        pod[command](argv._[1], argv._[2])
     } else {
         if (command) {
             warn('unknown command ' + command)
@@ -399,7 +396,7 @@ function createHook (appname, repo, work) {
     var data = fs.readFileSync(__dirname + '/../hooks/post-update', 'utf-8')
 
     data = data
-        .replace(/\{\{ok_dir\}\}/g, config.dir)
+        .replace(/\{\{pod_dir\}\}/g, config.dir)
         .replace(/\{\{app\}\}/g, appname)
 
     fs.writeFile(hook, data, function (err) {
@@ -487,7 +484,7 @@ function prompt (msg, callback) {
 }
 
 function log (msg) {
-    console.log('[ok] '.green + msg)
+    console.log('[pod] '.green + msg)
 }
 
 function warn (msg) {
