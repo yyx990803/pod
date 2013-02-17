@@ -5,7 +5,8 @@
     "description": "Simple deployment tool for multiple node apps on a single linux server",
     "dependencies": {
         "optimist": ">= 0.3.5",
-        "forever": ">= 0.10.0"
+        "forever": ">= 0.10.0",
+        "colors": ">= 0.6.0"
     },
     "devDependencies": {
         "mocha": ">= 1.7.0",

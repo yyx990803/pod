@@ -6,6 +6,7 @@ var fs      = require('fs'),
     exec    = require('child_process').exec,
     path    = require('path'),
     argv    = require('optimist').argv,
+    colors  = require('colors'),
     cwd     = process.cwd()
 
 var forever, // lazy load so commands that doesn't need it runs faster
@@ -25,7 +26,7 @@ var config = {},
     configPath = process.env.HOME + '/.okconfig'
 
 var usage = '\n'
-    + '  \u001b[36mOK version ' + require('../package.json').version + '\u001b[0m\n'
+    + ('  OK version ' + require('../package.json').version + '\n').cyan
     + '\n'
     + '  Usage: ok [command] [options]\n'
     + '\n'
@@ -182,10 +183,8 @@ var ok = {
                 apps.forEach(function (app) {
                     var script = config.dir + '/apps/' + app + '/app.js',
                         port = sniffPort(script),
-                        status = isRunning(list, script) ?
-                            ' - \u001b[32mON\u001b[0m' :
-                            ' - \u001b[31mOFF\u001b[0m'
-                    console.log('⚑ ' + app + port + status)
+                        status = isRunning(list, script) ? 'ON'.green : 'OFF'.red
+                    console.log('⚑ ' + app + port + ' - ' + status)
                 })
             }
         })
@@ -488,11 +487,11 @@ function prompt (msg, callback) {
 }
 
 function log (msg) {
-    console.log('\u001b[32m[ok]\u001b[0m ' + msg)
+    console.log('[ok] '.green + msg)
 }
 
 function warn (msg) {
-    console.warn('\u001b[31merror\u001b[0m: ' + msg)
+    console.warn('error: '.red + msg)
 }
 
 function formatJSON (val) {
