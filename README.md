@@ -27,7 +27,7 @@ If you want to try it out, simply clone it then `(sudo) npm link`.
     set <key> <val>         Set a config option
     start <appname>         Start an app with forever
     stop <appname>          Stop an app
-    restart <appname>       Restart a running app, will start if not already running
+    restart <appname>       Restart an app, start if not already running
     startall                Start all apps not already running
     stopall                 Stop all apps
     restartall              Restart all running apps
