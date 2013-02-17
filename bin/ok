@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// TODO use forever-monitor programatically!!
+
+process.env.NODE_ENV = 'production'
 
 var fs      = require('fs'),
     exec    = require('child_process').exec,
@@ -7,12 +8,74 @@ var fs      = require('fs'),
     argv    = require('optimist').argv,
     cwd     = process.cwd()
 
-var userHome,
-    configPath,
-    config = {},
-    runningStatus = null
+var forever, // lazy load so commands that doesn't need it runs faster
+    foreverTasks = [
+        'list',
+        'start',
+        'stop',
+        'restart',
+        'startall',
+        'stopall',
+        'restartall'
+    ]
 
-var tasks = {
+var config = {},
+    configPath = process.env.HOME + '/.okconfig'
+
+var usage = '\n'
+    + '  \u001b[36mOK: Simple Deployment Tool for Node.js\u001b[0m\n'
+    + '\n'
+    + '  Usage: ok [command]\n'
+    + '\n'
+    + '  Commands:\n'
+    + '\n'
+    + '    create <appname>        Create a new app\n'
+    + '    rm <appname>            Delete an app\n'
+    + '    repo <appname>          Print the path to the app\'s bare repo\n'
+    + '    path <appname>          Print the path to the app\'s working tree\n'
+    + '    list                    List all apps with port and running status\n'
+    + '    procs                   Prints detailed info for running processes\n'
+    + '    config                  Print current config options\n'
+    + '    set <key> <val>         Set a config option\n'
+    + '    start <appname>         Start an app with forever\n'
+    + '    stop <appname>          Stop an app\n'
+    + '    restart <appname>       Restart a running app, will start if not already running\n'
+    + '    startall                Start all apps not already running\n'
+    + '    stopall                 Stop all apps\n'
+    + '    restartall              Restart all running apps\n'
+    + '    help                    You are reading it right now\n'
+
+var ok = {
+
+    help: function () {
+        console.log(usage)
+    },
+
+    config: function () {
+        for (var op in config) {
+            console.log(op + ': ' + config[op])
+        }
+    },
+
+    repo: function (appname) {
+        if (!appname) return
+        var path = config.dir + '/repos/' + appname + '.git'
+        if (fs.existsSync(path)) {
+            console.log(path)
+        } else {
+            warn('cannot find repo for ' + appname)
+        }
+    },
+
+    path: function (appname) {
+        if (!appname) return
+        var path = config.dir + '/apps/' + appname
+        if (fs.existsSync(path)) {
+            console.log(path)
+        } else {
+            warn('cannot find working tree for ' + appname)
+        }
+    },
 
     create: function (appname) {
         if (!appname) return
@@ -29,9 +92,9 @@ var tasks = {
         // create log folder
         fs.mkdir(log, function (err) {
             if (err) {
-                warn(err)
+                console.error(err)
             } else {
-                console.log('create logs dir at' + log)
+                log('create logs dir at' + log)
             }
         })
         
@@ -41,7 +104,7 @@ var tasks = {
             if (err) {
                 warn(err)
             } else {
-                console.log('create bare repo at ' + repo)
+                log('create bare repo at ' + repo)
                 // add post-update hook
                 createHook(appname, repo, work)
                 // create working copy
@@ -49,7 +112,7 @@ var tasks = {
                     if (err) {
                         warn(err)
                     } else {
-                        console.log('create empty working copy at ' + work)
+                        log('create empty working copy at ' + work)
                     }
                 })
             }
@@ -73,12 +136,12 @@ var tasks = {
         prompt('Really delete app \'' + appname + '\'? (y/n)', function (res) {
             if (res === 'y') {
                 // stop it first
-                tasks.stop(appname)
+                ok.stop(appname)
                 exec('rm -rf ' + repo + ' ' + work + ' ' + log, function (err) {
                     if (err) {
                         warn(err)
                     } else {
-                        console.log('Deleted app: ' + appname)
+                        log('deleted app: ' + appname)
                     }
                 })
             }
@@ -89,35 +152,31 @@ var tasks = {
     list: function () {
 
         var apps = findApps()
-
         if (!apps.length) {
-            console.log('No apps found.')
+            console.log('no apps found.')
             return
         }
 
-        // see if they are running
-        exec('forever list', function (err, stdout) {
+        forever.list(false, function (err, list) {
             if (err) {
                 warn(err)
             } else {
-                var output = []
-
                 apps.forEach(function (app) {
-                    var port = sniffPort(app),
-                        status
-                    if (stdout.match(new RegExp(config.dir + '/apps/' + app + '/app.js', 'i'))) {
-                        status = ' - \u001b[32mON\u001b[0m'
-                    } else {
-                        status = ' - \u001b[31mOFF\u001b[0m'
-                    }
-                    output.push(app + port + status)
+                    var script = config.dir + '/apps/' + app + '/app.js',
+                        port = sniffPort(script),
+                        status = isRunning(list, script) ?
+                            ' - \u001b[32mON\u001b[0m' :
+                            ' - \u001b[31mOFF\u001b[0m'
+                    console.log('⚑ ' + app + port + status)
                 })
-
-                output.forEach(function (a) {
-                    console.log('⚑ ' + a)
-                })
-
             }
+        })
+
+    },
+
+    procs: function () {
+        forever.list(true, function (err, info) {
+            console.log(info ? info : 'no app is running.')
         })
     },
 
@@ -137,93 +196,163 @@ var tasks = {
         }
     },
 
-    // proxy these to forever
-
-    start: function (appname) {
+    start: function (appname, list) {
         if (!appname) return
 
         var script = config.dir + '/apps/' + appname + '/app.js',
             logDir = config.dir + '/logs/' + appname
 
         if (!fs.existsSync(script)) {
-            warn('app.js not found.')
+            warn('cannot locate app.js for ' + appname)
             return
         }
 
-        // have to make sure it's running only once
-        // forever -m 1 seems to have problems
-        exec('forever list | grep ' + script, function (err, stdout) {
-            if (err && err.code === 1) {
-                exec('NODE_ENV=production forever start -a -m 5'
-                    + '-l ' + logDir + '/forever.log '
-                    + '-o ' + logDir + '/stdout.log '
-                    + script, handle)
-            } else {
+        if (list && list.length) {
+            run()
+        } else {
+            forever.list(false, function (err, procs) {
+                if (err) {
+                    warn(err)
+                } else {
+                    list = procs
+                    run()
+                }
+            })
+        }
+
+        function run () {
+            if (isRunning(list, script)) {
                 console.log(appname + ' already running.')
+            } else {
+                forever.startDaemon(script, {
+                    max: 3,
+                    logFile: logDir + '/forever.log',
+                    outFile: logDir + '/stdout.log',
+                    append: true
+                })
+                var port = sniffPort(script)
+                log(appname + ' running' + (port ? (' on port' + port) : ''))
             }
-        })
-    },
-
-    startall: function () {
-        var apps = findApps()
-        apps.forEach(tasks.start)
-    },
-
-    restart: function (appname) {
-        if (!appname) return
-        var script = config.dir + '/apps/' + appname + '/app.js'
-        exec('forever restart ' + script, handle)
-    },
-
-    restartall: function () {
-        exec('forever restartall', handle)
+        }
     },
 
     stop: function (appname) {
         if (!appname) return
-        var script = config.dir + '/apps/' + appname + '/app.js'
-        exec('forever stop ' + script, handle)
+
+        var script = config.dir + '/apps/' + appname + '/app.js',
+            runner = forever.stop(script)
+
+        runner.on('stop', function () {
+            log(appname + ' stopped.')
+        })
+
+        runner.on('error', function () {
+            warn(appname + ' is not running.')
+        })
+    },
+
+    restart: function (appname) {
+        if (!appname) return
+
+        var script = config.dir + '/apps/' + appname + '/app.js',
+            runner = forever.restart(script)
+
+        runner.on('restart', function () {
+            log(appname + ' restarted.')
+        })
+
+        runner.on('error', function () {
+            log(appname + ' is not running, starting instead...')
+            ok.start(appname)
+        })
+
+    },
+
+    startall: function () {
+        forever.list(false, function (err, list) {
+            if (err) {
+                warn(err)
+            } else {
+                var apps = findApps()
+                if (!apps.length) {
+                    console.log('no apps found.')
+                    return
+                }
+                apps.forEach(function (app) {
+                    ok.start(app, list)
+                })      
+            }
+        })
     },
 
     stopall: function () {
-        exec('forever stopall', handle)
-    }
+        var runner = forever.stopAll()
+        runner.on('stopAll', function (processes) {
+            if (processes && processes.length) {
+                var appnameRE = new RegExp(config.dir + '/apps/(.+)/app.js')
+                log('stopped:')
+                processes.forEach(function (p) {
+                    var match = p.file.match(appnameRE)
+                    if (match) console.log('⚑ ' + match[1])
+                })
+            } else {
+                console.log('no app is running.');
+            }
+        })
+        runner.on('error', function (err) {
+            console.log('no app is running.')
+        })
+    },
+
+    restartall: function () {
+        var runner = forever.restartAll()
+        runner.on('restartAll', function (processes) {
+            if (processes && processes.length) {
+                var appnameRE = new RegExp(config.dir + '/apps/(.+)/app.js')
+                log('restarted:')
+                processes.forEach(function (p) {
+                    var match = p.file.match(appnameRE)
+                    if (match) console.log('⚑ ' + match[1])
+                })
+            } else {
+                console.log('no app is running.');
+            }
+        })
+        runner.on('error', function (err) {
+            console.log('no app is running.')
+        })
+    },
 
 }
 
-
-
 // INIT
 
-exec('echo $HOME', function (err, stdout) {
-    userHome = stdout.replace(/\n/g, '')
-    configPath = userHome + '/.okconfig'
-    if (fs.existsSync(configPath)) {
-        // load existing config file
-        config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
-        doCommand()
-    } else {
-        // otherwise init a new config
-        console.log('No .okconfig found.')
+if (fs.existsSync(configPath)) {
+    // load existing config file
+    config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+    parseCommand()
+} else {
+    // otherwise init a new config
+    console.log('No .okconfig found.')
+    initConfig()
+}
 
-        prompt('Where do you want OK to keep all its stuff?', function (res) {
-            res = path.resolve(cwd, res)
-            if (fs.existsSync(res) && isDir(res)) {
-                config.dir = res
-                writeConfig(function () {
-                    console.log('created new .okconfig in ' + userHome)
-                    makeDirs()
-                    doCommand()
-                })
-            } else {
-                console.log('invalid path.')
-            }
-        })
-        
-        
-                    
-    }
-})
+function initConfig () {
+    prompt('Where do you want OK to keep all its stuff?', function (res) {
+        res = path.resolve(cwd, res)
+        if (fs.existsSync(res) && isDir(res)) {
+            config.dir = res
+            writeConfig(function () {
+                log('created new .okconfig in ' + process.env.HOME)
+                makeDirs()
+                parseCommand()
+            })
+        } else {
+            console.log('invalid path.')
+            initConfig()
+        }
+    })
+}
 
 function makeDirs () {
     var apps = config.dir + '/apps',
@@ -234,17 +363,15 @@ function makeDirs () {
     if (!fs.existsSync(logs)) fs.mkdirSync(logs)
 }
 
-function doCommand () {
+function parseCommand () {
 
-    var command = argv._[0]
+    var command = argv._[0] || 'help'
 
-    if (!command) {
-        logConfig()
-        return
-    }
-
-    if (tasks[command]) {
-        tasks[command](argv._[1], argv._[2])
+    if (ok[command]) {
+        if (foreverTasks.indexOf(command) !== -1) {
+            forever = require('forever/lib/forever')
+        }
+        ok[command](argv._[1], argv._[2])
     } else {
         if (command) {
             warn('unknown command ' + command)
@@ -271,6 +398,88 @@ function createHook (appname, repo, work) {
         }
     })
 
+}
+
+function writeConfig (callback) {
+    fs.writeFile(configPath, formatJSON(JSON.stringify(config)), function (err) {
+        if (err) {
+            warn(err)
+        } else {
+            if (callback) callback()
+        }
+    })
+}
+
+function findApps () {
+
+    var repos,
+        works,
+        apps = []
+
+    // get repos
+    repos = fs.readdirSync(config.dir + '/repos').filter(function (r) {
+        return r.match(/\b.*\.git\b/g)
+    })
+
+    if (!repos) {
+        console.log('no apps found.')
+        return
+    }
+
+    // get working copies
+    works = fs.readdirSync(config.dir + '/apps')
+
+    // make sure an app has both the git repo and the working copy
+    repos.forEach(function (r) {
+        var name = r.slice(0, -4)
+        if (works.indexOf(name) !== -1) {
+            apps.push(name)
+        }
+    })
+
+    return apps
+}
+
+function sniffPort (script) {
+    if (fs.existsSync(script)) {
+        // sniff port
+        var content = fs.readFileSync(script, 'utf-8'),
+            port = content.match(/\.listen\(([0-9]+)\)/)[1]
+        return port ? (' : ' + port) : ''
+    } else {
+        return ''
+    }
+}
+
+function isRunning(list, script) {
+    if (!list || !list.length) return false
+    for (var i = 0, j = list.length; i < j; i++) {
+        if (list[i].file === script) {
+            return true
+        }
+    }
+}
+
+function isDir (path) {
+    return fs.statSync(path).isDirectory()
+}
+
+function prompt (msg, callback) {
+    console.log(msg)
+    process.stdin.resume()
+    process.stdin.setEncoding('utf8')
+    process.stdin.on('data', function (input) {
+        process.stdin.pause()
+        callback(input.replace(/\n/g, ''))
+    })
+}
+
+function log (msg) {
+    console.log('\u001b[32m[ok]\u001b[0m ' + msg)
+}
+
+function warn (msg) {
+    console.warn('\u001b[31merror\u001b[0m: ' + msg)
 }
 
 function formatJSON (val) {
@@ -305,86 +514,4 @@ function formatJSON (val) {
         }
     }
     return retval
-}
-
-function writeConfig (callback) {
-    fs.writeFile(configPath, formatJSON(JSON.stringify(config)), function (err) {
-        if (err) {
-            warn(err)
-        } else {
-            if (callback) callback()
-        }
-    })
-}
-
-function logConfig () {
-    for (var op in config) {
-        console.log(op + ': ' + config[op])
-    }
-}
-
-function findApps () {
-
-    var repos,
-        works,
-        apps = []
-
-    // get repos
-    repos = fs.readdirSync(config.dir + '/repos').filter(function (r) {
-        return r.match(/\b.*\.git\b/g)
-    })
-
-    if (!repos) {
-        console.log('No apps found.')
-        return
-    }
-
-    // get working copies
-    works = fs.readdirSync(config.dir + '/apps')
-
-    // make sure an app has both the git repo and the working copy
-    repos.forEach(function (r) {
-        var name = r.slice(0, -4)
-        if (works.indexOf(name) !== -1) {
-            apps.push(name)
-        }
-    })
-
-    return apps
-}
-
-function sniffPort (appname) {
-    var appFile = config.dir + '/apps/' + appname + '/app.js'
-    if (fs.existsSync(appFile)) {
-        // sniff port
-        var content = fs.readFileSync(appFile, 'utf-8'),
-            port = content.match(/\.listen\(([0-9]+)\)/)[1]
-        return port ? (' : ' + port) : ''
-    } else {
-        return ''
-    }
-}
-
-function warn (msg) {
-    console.warn('\u001b[31merror\u001b[0m:   ' + msg)
-}
-
-function handle (err, stdout, stderr) {
-    if (err) warn(err)
-    if (stderr) console.log(stderr)
-    console.log(stdout)
-}
-
-function prompt (msg, callback) {
-    console.log(msg)
-    process.stdin.resume()
-    process.stdin.setEncoding('utf8')
-    process.stdin.on('data', function (input) {
-        process.stdin.pause()
-        callback(input.replace(/\n/g, ''))
-    })
-}
-
-function isDir (path) {
-    return fs.statSync(path).isDirectory()
 }

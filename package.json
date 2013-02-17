@@ -4,7 +4,8 @@
     "author": "Evan You <yyx990803@gmail.com>",
     "description": "personal deployment tool for Linux + Node.js using git",
     "dependencies": {
-        "optimist": ">= 0.3.5"
+        "optimist": ">= 0.3.5",
+        "forever": ">= 0.10.0"
     },
     "devDependencies": {
         "mocha": ">= 1.7.0",
