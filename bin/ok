@@ -11,6 +11,7 @@ var fs      = require('fs'),
 var forever, // lazy load so commands that doesn't need it runs faster
     foreverTasks = [
         'list',
+        'procs',
         'start',
         'stop',
         'restart',
