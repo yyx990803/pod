@@ -29,7 +29,7 @@ var pod = {
         var usage = '\n'
             + ('  Pod - version ' + require('../package.json').version + '\n').cyan
             + '\n'
-            + '  Usage: pod [command] [options]\n'
+            + '  Usage: pod [command]\n'
             + '\n'
             + '  Commands:\n'
             + '\n'

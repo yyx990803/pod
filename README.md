@@ -12,7 +12,7 @@ $ npm install -g pod
 
 ```
 
-  Usage: pod [command] [options]
+  Usage: pod [command]
 
   Commands:
 
