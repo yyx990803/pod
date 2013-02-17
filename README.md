@@ -57,10 +57,10 @@ Lists existing apps and attempts to sniff the port they're listening to, and whe
 ---
 
 ``` bash
-$ ok set dir path
+$ ok set dir path/to/ok_dir
 ```
 
-Sets the config path.
+Sets the config path. You can use relative paths here, e.g. `ok set dir .`
 
 ---
 

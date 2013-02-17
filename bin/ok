@@ -125,8 +125,8 @@ var tasks = {
         if (config[key] && val) {
             // test if path exists
             if (key === 'dir') {
-                var dir = path.resolve(cwd, val)
-                if (!fs.existsSync(dir) || !isDir(dir)) {
+                val = path.resolve(cwd, val)
+                if (!fs.existsSync(val) || !isDir(val)) {
                     warn('invalid directory path.')
                     return
                 }
