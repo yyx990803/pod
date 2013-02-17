@@ -83,7 +83,7 @@ var ok = {
         
         var repo = config.dir + '/repos/' + appname + '.git',
             work = config.dir + '/apps/' + appname,
-            log = config.dir + '/logs/' + appname
+            logDir = config.dir + '/logs/' + appname
 
         if (fs.existsSync(repo) || fs.existsSync(work)) {
             warn('an app with that name already exists.')
@@ -91,11 +91,11 @@ var ok = {
         }
 
         // create log folder
-        fs.mkdir(log, function (err) {
+        fs.mkdir(logDir, function (err) {
             if (err) {
                 console.error(err)
             } else {
-                log('create logs dir at' + log)
+                log('create logs dir at' + logDir)
             }
         })
         
