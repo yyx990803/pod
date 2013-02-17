@@ -2,7 +2,7 @@
     "name": "ok",
     "version": "0.1.0",
     "author": "Evan You <yyx990803@gmail.com>",
-    "description": "personal deployment tool for Linux + Node.js using git",
+    "description": "Simple deployment tool for multiple node apps on a single linux server",
     "dependencies": {
         "optimist": ">= 0.3.5",
         "forever": ">= 0.10.0"

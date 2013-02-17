@@ -10,6 +10,7 @@ var fs      = require('fs'),
 
 var forever, // lazy load so commands that doesn't need it runs faster
     foreverTasks = [
+        'rm',
         'list',
         'procs',
         'start',
@@ -26,7 +27,7 @@ var config = {},
 var usage = '\n'
     + '  \u001b[36mOK: Simple Deployment Tool for Node.js\u001b[0m\n'
     + '\n'
-    + '  Usage: ok [command]\n'
+    + '  Usage: ok [command] [options]\n'
     + '\n'
     + '  Commands:\n'
     + '\n'
@@ -34,8 +35,7 @@ var usage = '\n'
     + '    rm <appname>            Delete an app\n'
     + '    repo <appname>          Print the path to the app\'s bare repo\n'
     + '    path <appname>          Print the path to the app\'s working tree\n'
-    + '    list                    List all apps with port and running status\n'
-    + '    procs                   Prints detailed info for running processes\n'
+    + '    list [-p]               List apps and status. [-p] = List processes\n'
     + '    config                  Print current config options\n'
     + '    set <key> <val>         Set a config option\n'
     + '    start <appname>         Start an app with forever\n'
@@ -127,10 +127,10 @@ var ok = {
 
         var repo = config.dir + '/repos/' + appname + '.git',
             work = config.dir + '/apps/' + appname,
-            log = config.dir + '/logs/' + appname
+            logDir = config.dir + '/logs/' + appname
 
         if (!fs.existsSync(repo) && !fs.existsSync(work)) {
-            warn('app does not exist')
+            warn('cannot find app ' + appname)
             return
         }
 
@@ -138,7 +138,8 @@ var ok = {
             if (res === 'y') {
                 // stop it first
                 ok.stop(appname)
-                exec('rm -rf ' + repo + ' ' + work + ' ' + log, function (err) {
+                // fs.rmdir can't -rf
+                exec('rm -rf ' + repo + ' ' + work + ' ' + logDir, function (err) {
                     if (err) {
                         warn(err)
                     } else {
@@ -158,6 +159,13 @@ var ok = {
             return
         }
 
+        if (argv.p) {
+            forever.list(true, function (err, info) {
+                console.log(info ? info : 'no processes found.')
+            })
+            return
+        }
+
         forever.list(false, function (err, list) {
             if (err) {
                 warn(err)
@@ -173,12 +181,6 @@ var ok = {
             }
         })
 
-    },
-
-    procs: function () {
-        forever.list(true, function (err, info) {
-            console.log(info ? info : 'no app is running.')
-        })
     },
 
     set: function (key, val) {
@@ -248,7 +250,7 @@ var ok = {
         })
 
         runner.on('error', function () {
-            warn(appname + ' is not running.')
+            log(appname + ' is not running.')
         })
     },
 
