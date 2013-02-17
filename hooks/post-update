@@ -5,4 +5,5 @@ env -i git pull
 
 npm install --production
 
+ok cleanlogs {{app}}
 ok restart {{app}}

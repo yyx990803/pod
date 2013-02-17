@@ -19,8 +19,7 @@ If you want to try it out, simply clone it then `(sudo) npm link`.
 
     create <appname>        Create a new app
     rm <appname>            Delete an app
-    repo <appname>          Print the path to the app's bare repo
-    path <appname>          Print the path to the app's working tree
+    cleanlog <appname>      Clean up logs for an app
     list                    List all apps with port and running status
     procs                   Prints detailed info for running processes
     config                  Print current config options

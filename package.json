@@ -1,6 +1,6 @@
 {
     "name": "ok",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "author": "Evan You <yyx990803@gmail.com>",
     "description": "Simple deployment tool for multiple node apps on a single linux server",
     "dependencies": {

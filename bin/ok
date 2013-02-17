@@ -25,7 +25,7 @@ var config = {},
     configPath = process.env.HOME + '/.okconfig'
 
 var usage = '\n'
-    + '  \u001b[36mOK: Simple Deployment Tool for Node.js\u001b[0m\n'
+    + '  \u001b[36mOK version ' + require('../package.json').version + '\u001b[0m\n'
     + '\n'
     + '  Usage: ok [command] [options]\n'
     + '\n'
@@ -33,8 +33,7 @@ var usage = '\n'
     + '\n'
     + '    create <appname>        Create a new app\n'
     + '    rm <appname>            Delete an app\n'
-    + '    repo <appname>          Print the path to the app\'s bare repo\n'
-    + '    path <appname>          Print the path to the app\'s working tree\n'
+    + '    cleanlog <appname>      Clean up logs for an app\n'
     + '    list [-p]               List apps and status. [-p] = List processes\n'
     + '    config                  Print current config options\n'
     + '    set <key> <val>         Set a config option\n'
@@ -55,26 +54,6 @@ var ok = {
     config: function () {
         for (var op in config) {
             console.log(op + ': ' + config[op])
-        }
-    },
-
-    repo: function (appname) {
-        if (!appname) return
-        var path = config.dir + '/repos/' + appname + '.git'
-        if (fs.existsSync(path)) {
-            console.log(path)
-        } else {
-            warn('cannot find repo for ' + appname)
-        }
-    },
-
-    path: function (appname) {
-        if (!appname) return
-        var path = config.dir + '/apps/' + appname
-        if (fs.existsSync(path)) {
-            console.log(path)
-        } else {
-            warn('cannot find working tree for ' + appname)
         }
     },
 
@@ -149,6 +128,36 @@ var ok = {
             }
         })
         
+    },
+
+    cleanlog: function (appname) {
+        var logDir = logDir = config.dir + '/logs/' + appname
+        if (!fs.existsSync(logDir)) {
+            warn('cannot find log directory for ' + appname)
+            return
+        }
+        clean('forever.log')
+        clean('stderr.log')
+        clean('stdout.log')
+        var total = 3
+        function clean (file) {
+            file = logDir + '/' + file
+            fs.exists(file, function (exist) {
+                if (exist) {
+                    fs.unlink(file, function (err) {
+                        if (!err) {
+                            done()
+                        } else {
+                            warn(err)
+                        }
+                    })
+                } else done()
+            })
+        }
+        function done () {
+            total--
+            if (!total) console.log('cleaned logs for ' + appname)
+        }
     },
 
     list: function () {
@@ -230,6 +239,7 @@ var ok = {
                 forever.startDaemon(script, {
                     max: 3,
                     logFile: logDir + '/forever.log',
+                    errFile: logDir + '/stderr.log',
                     outFile: logDir + '/stdout.log',
                     append: true
                 })
