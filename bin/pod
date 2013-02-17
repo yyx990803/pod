@@ -154,7 +154,7 @@ var pod = {
         }
         function done () {
             total--
-            if (!total) console.log('cleaned logs for ' + appname)
+            if (!total) log('cleaned logs for ' + appname)
         }
     },
 
