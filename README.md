@@ -9,13 +9,15 @@ All you need is Node, git, and a ssh account.
 ### Installation
 
 ``` bash
-$ npm install -g pod
+$ [sudo] npm install -g pod
 ```
 
-You might also want write a simple [upstart](http://upstart.ubuntu.com) script that contains something like this:
+To make pod auto start all managed apps on system startup, you might also want write a simple [upstart](http://upstart.ubuntu.com) script that contains something like this:
 
 ``` bash
-exec sudo -u <username> /usr/bin/node /absolute/path/to/pod startall
+# /etc/init/pod.conf
+start on startup
+exec sudo -u <username> /path/to/node /path/to/pod startall
 ```
 
 ### Usage
