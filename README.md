@@ -73,4 +73,4 @@ $ git push deploy master
 ```
 
 App should be automatically running after the push. For later pushes, app process will be restarted.  
-You can edit the post-update script or add other hooks for each app in its repo's `hooks` directory.
+You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push, e.g. add `NODE_ENV=production` before `pod restart {{app}}`.
