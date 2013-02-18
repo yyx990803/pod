@@ -55,8 +55,6 @@ exec sudo -u <username> /usr/bin/node /absolute/path/to/pod startall
 
 ### Workflow
 
-Make sure your app's main file is named `app.js`.
-
 On the server:
 
 ``` bash
@@ -78,5 +76,10 @@ $ git remote add deploy ssh://username@host[:port]/pod_dir/repos/myapp.git
 $ git push deploy master
 ```
 
+### Things to Know
+
+The default script that `pod` looks for in each app is `app.js`. You can change this with `pod set appfile <filename>`.  
+
 App should be automatically running after the push. For later pushes, app process will be restarted.  
+
 You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push, e.g. add `NODE_ENV=production` before `pod restart {{app}}`.
