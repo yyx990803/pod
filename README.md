@@ -1,4 +1,4 @@
-# Pod - Simple Node.js Deployment Tool
+# POD - super simple Node.js deployment tool
 
 Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server. It is built upon git hooks and [forever](https://github.com/nodejitsu/forever).
 
