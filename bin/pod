@@ -350,7 +350,7 @@ var pod = {
         runner.on('error', function (err) {
             console.log('no app is running.')
         })
-    },
+    }
 
 }
 
@@ -377,23 +377,18 @@ function initConfig () {
 
             writeConfig(function () {
                 log('created new .podconfig in ' + process.env.HOME.yellow)
-                makeDirs()
-                parseCommand()
+                var apps = config.dir + '/apps',
+                    repos = config.dir + '/repos'
+                    logs = config.dir + '/logs'
+                if (!fs.existsSync(apps)) fs.mkdirSync(apps)
+                if (!fs.existsSync(repos)) fs.mkdirSync(repos)
+                if (!fs.existsSync(logs)) fs.mkdirSync(logs)
             })
         } else {
             console.log('invalid path.')
             initConfig()
         }
     })
-}
-
-function makeDirs () {
-    var apps = config.dir + '/apps',
-        repos = config.dir + '/repos'
-        logs = config.dir + '/logs'
-    if (!fs.existsSync(apps)) fs.mkdirSync(apps)
-    if (!fs.existsSync(repos)) fs.mkdirSync(repos)
-    if (!fs.existsSync(logs)) fs.mkdirSync(logs)
 }
 
 function parseCommand () {

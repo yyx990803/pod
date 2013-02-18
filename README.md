@@ -12,6 +12,12 @@ All you need is Node, git, and a ssh account.
 $ npm install -g pod
 ```
 
+You might also want write a simple [upstart](http://upstart.ubuntu.com) script that contains something like this:
+
+``` bash
+exec sudo -u <username> /usr/bin/node /absolute/path/to/pod startall
+```
+
 ### Usage
 
 ```
@@ -44,7 +50,7 @@ $ npm install -g pod
     dir                     Directory to hold the repos, apps and logs
     appfile                 The main file to look for in each app. Default is 'app.js'
     editor                  The editor to use when editing hook scripts
-
+    
 ```
 
 ### Workflow
