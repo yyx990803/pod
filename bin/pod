@@ -36,6 +36,7 @@ var pod = {
             + '    create <appname>        Create a new app\n'
             + '    rm <appname>            Delete an app\n'
             + '    cleanlogs <appname>     Clean up logs for an app\n'
+            + '    edit <appname>          Edit the app\'s post-receive hook\n'
             + '    list [-p]               List apps and status. [-p] = List processes\n'
             + '    config                  Print current config options\n'
             + '    set <key> <val>         Set a config option\n'
@@ -46,12 +47,18 @@ var pod = {
             + '    stopall                 Stop all apps\n'
             + '    restartall              Restart all running apps\n'
             + '    help                    You are reading it right now\n'
+            + '\n'
+            + '  Config:\n'
+            + '\n'
+            + '    dir                     Directory to hold the repos, apps and logs\n'
+            + '    appfile                 The main file to look for in each app\n'
+            + '    editor                  The editor to use when editing hook scripts\n'
         console.log(usage)
     },
 
     config: function () {
         for (var op in config) {
-            console.log(op + ': ' + config[op])
+            console.log(op.cyan + spaces(10 - op.length) + config[op])
         }
     },
 
@@ -83,7 +90,7 @@ var pod = {
                 warn(err)
             } else {
                 log('create bare repo at ' + repo.yellow)
-                // add post-update hook
+                // add post-receive hook
                 createHook(appname, repo, work)
                 // create working copy
                 exec('git clone ' + repo + ' ' + work, function (err) {
@@ -107,7 +114,7 @@ var pod = {
             logDir = config.dir + '/logs/' + appname
 
         if (!fs.existsSync(repo) && !fs.existsSync(work)) {
-            warn('cannot find app ' + appname)
+            warn('cannot find app ' + appname.yellow)
             return
         }
 
@@ -120,7 +127,7 @@ var pod = {
                     if (err) {
                         warn(err)
                     } else {
-                        log('deleted app: ' + appname)
+                        log('deleted app: ' + appname.yellow)
                     }
                 })
             }
@@ -154,8 +161,19 @@ var pod = {
         }
         function done () {
             total--
-            if (!total) log('cleaned logs for ' + appname)
+            if (!total) log('cleaned logs for ' + appname.yellow)
         }
+    },
+
+    edit: function (appname) {
+        if (!appname) return
+        process.stdin.setRawMode(true)
+        var p = require('child_process').spawn(config.editor, [config.dir + '/repos/' + appname + '.git/hooks/post-receive'], {
+            customFds: [ 0, 1, 2 ]
+        })
+        p.on('exit', function () {
+            process.stdin.setRawMode(false)
+        })
     },
 
     list: function () {
@@ -177,11 +195,12 @@ var pod = {
             if (err) {
                 warn(err)
             } else {
+                var longest = getLongestName(apps)
                 apps.forEach(function (app) {
-                    var script = config.dir + '/apps/' + app + '/app.js',
+                    var script = config.dir + '/apps/' + app + '/' + config.appfile,
                         port = sniffPort(script),
                         status = isRunning(list, script) ? 'ON'.green : 'OFF'.red
-                    console.log('⚑ ' + app + port + ' - ' + status)
+                    console.log('⚑ ' + app.yellow + spaces(longest - app.length) + ' - ' + status + port)
                 })
             }
         })
@@ -201,17 +220,18 @@ var pod = {
 
             config[key] = val
             writeConfig()
+            console.log(key.cyan + ' set to ' + val.magenta)
         }
     },
 
     start: function (appname, list) {
         if (!appname) return
 
-        var script = config.dir + '/apps/' + appname + '/app.js',
+        var script = config.dir + '/apps/' + appname + '/' + config.appfile,
             logDir = config.dir + '/logs/' + appname
 
         if (!fs.existsSync(script)) {
-            warn('cannot locate app.js for ' + appname)
+            warn('cannot locate ' + appfile + ' for ' + appname.yellow)
             return
         }
 
@@ -240,7 +260,7 @@ var pod = {
                     append: true
                 })
                 var port = sniffPort(script)
-                log(appname + ' running' + (port ? (' on port' + port) : ''))
+                log(appname.yellow + ' running' + (port ? (' on port' + port) : ''))
             }
         }
     },
@@ -248,30 +268,30 @@ var pod = {
     stop: function (appname) {
         if (!appname) return
 
-        var script = config.dir + '/apps/' + appname + '/app.js',
+        var script = config.dir + '/apps/' + appname + '/' + config.appfile,
             runner = forever.stop(script)
 
         runner.on('stop', function () {
-            log(appname + ' stopped.')
+            log(appname.yellow + ' stopped.')
         })
 
         runner.on('error', function () {
-            log(appname + ' is not running.')
+            log(appname.yellow + ' is not running.')
         })
     },
 
     restart: function (appname) {
         if (!appname) return
 
-        var script = config.dir + '/apps/' + appname + '/app.js',
+        var script = config.dir + '/apps/' + appname + '/' + config.appfile,
             runner = forever.restart(script)
 
         runner.on('restart', function () {
-            log(appname + ' restarted.')
+            log(appname.yellow + ' restarted.')
         })
 
         runner.on('error', function () {
-            log(appname + ' is not running, starting instead...')
+            log(appname.yellow + ' is not running, starting instead...')
             pod.start(appname)
         })
 
@@ -298,11 +318,11 @@ var pod = {
         var runner = forever.stopAll()
         runner.on('stopAll', function (processes) {
             if (processes && processes.length) {
-                var appnameRE = new RegExp(config.dir + '/apps/(.+)/app.js')
+                var appnameRE = new RegExp(config.dir + '/apps/(.+)/' + config.appfile)
                 log('stopped:')
                 processes.forEach(function (p) {
                     var match = p.file.match(appnameRE)
-                    if (match) console.log('⚑ ' + match[1])
+                    if (match) console.log('⚑ ' + match[1].yellow)
                 })
             } else {
                 console.log('no app is running.');
@@ -317,11 +337,11 @@ var pod = {
         var runner = forever.restartAll()
         runner.on('restartAll', function (processes) {
             if (processes && processes.length) {
-                var appnameRE = new RegExp(config.dir + '/apps/(.+)/app.js')
+                var appnameRE = new RegExp(config.dir + '/apps/(.+)/' + config.appfile)
                 log('restarted:')
                 processes.forEach(function (p) {
                     var match = p.file.match(appnameRE)
-                    if (match) console.log('⚑ ' + match[1])
+                    if (match) console.log('⚑ ' + match[1].yellow)
                 })
             } else {
                 console.log('no app is running.');
@@ -352,7 +372,7 @@ function initConfig () {
         if (fs.existsSync(res) && isDir(res)) {
             config.dir = res
             writeConfig(function () {
-                log('created new .podconfig in ' + process.env.HOME)
+                log('created new .podconfig in ' + process.env.HOME.yellow)
                 makeDirs()
                 parseCommand()
             })
@@ -383,7 +403,7 @@ function parseCommand () {
         pod[command](argv._[1], argv._[2])
     } else {
         if (command) {
-            warn('unknown command ' + command)
+            warn('unknown command ' + command.red)
         }
     }
 
@@ -392,10 +412,8 @@ function parseCommand () {
 // TODO make this read all existing hooks in ../hooks
 function createHook (appname, repo, work) {
 
-    var hook = repo + '/hooks/post-update'
-    var data = fs.readFileSync(__dirname + '/../hooks/post-update', 'utf-8')
-
-    data = data
+    var hook = repo + '/hooks/post-receive'
+    var data = fs.readFileSync(__dirname + '/../hooks/post-receive', 'utf-8')
         .replace(/\{\{pod_dir\}\}/g, config.dir)
         .replace(/\{\{app\}\}/g, appname)
 
@@ -491,6 +509,15 @@ function warn (msg) {
     console.warn('error: '.red + msg)
 }
 
+function spaces (length) {
+    if (length < 0) return ''
+    var ret = ''
+    while (length--) {
+        ret += ' '
+    }
+    return ret
+}
+
 function formatJSON (val) {
     var retval = '',
         str = val,
@@ -523,4 +550,12 @@ function formatJSON (val) {
         }
     }
     return retval
+}
+
+function getLongestName (apps) {
+    var longest = 0
+    apps.forEach(function (a) {
+        if (a.length > longest) longest = a.length
+    })
+    return longest
 }

@@ -1,6 +1,6 @@
 {
     "name": "pod",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "preferGlobal": "true",
     "author": {
         "name": "Evan You",
@@ -31,7 +31,7 @@
     "engines": {
         "node": ">= 0.8.x"
     },
-    "description": "Simple deployment tool for multiple node apps on a single linux server",
+    "description": "Simple Node.js deployment tool",
     "readme": "Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server.",
     "readmeFilename": "README.md"
 }

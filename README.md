@@ -1,6 +1,10 @@
-# Pod - Simple Deployment Tool for Node.js
+# Pod - Simple Node.js Deployment Tool
 
-Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server. Each project gets a bare Git repo that can be pushed to, and auto updates the working tree and restart the process with `forever` after a push.
+Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server. It is built upon git hooks and [forever](https://github.com/nodejitsu/forever).
+
+### Prerequisites
+
+All you need is Node, git, and a ssh account.
 
 ### Installation
 
@@ -18,7 +22,8 @@ $ npm install -g pod
 
     create <appname>        Create a new app
     rm <appname>            Delete an app
-    cleanlog <appname>      Clean up logs for an app
+    cleanlogs <appname>     Clean up logs for an app
+    edit <appname>          Edit the app\'s post-receive hook
     list [-p]               List apps and status. [-p] = List processes
     config                  Print current config options
     set <key> <val>         Set a config option
@@ -29,6 +34,16 @@ $ npm install -g pod
     stopall                 Stop all apps
     restartall              Restart all running apps
     help                    You are reading it right now
+
+```
+
+### Config
+
+```
+
+    dir                     Directory to hold the repos, apps and logs
+    appfile                 The main file to look for in each app. Default is 'app.js'
+    editor                  The editor to use when editing hook scripts
 
 ```
 
