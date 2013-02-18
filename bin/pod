@@ -371,6 +371,10 @@ function initConfig () {
         res = path.resolve(cwd, res)
         if (fs.existsSync(res) && isDir(res)) {
             config.dir = res
+            // default values
+            config.appfile = 'app.js'
+            config.editor = process.env.VISUAL || process.env.EDITOR || 'vi'
+
             writeConfig(function () {
                 log('created new .podconfig in ' + process.env.HOME.yellow)
                 makeDirs()

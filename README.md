@@ -23,7 +23,7 @@ $ npm install -g pod
     create <appname>        Create a new app
     rm <appname>            Delete an app
     cleanlogs <appname>     Clean up logs for an app
-    edit <appname>          Edit the app\'s post-receive hook
+    edit <appname>          Edit the app's post-receive hook
     list [-p]               List apps and status. [-p] = List processes
     config                  Print current config options
     set <key> <val>         Set a config option
