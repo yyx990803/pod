@@ -1,7 +1,15 @@
 #!/bin/bash
 
+# update working tree
 cd {{pod_dir}}/apps/{{app}}
 env -i git pull
+
+# install dependencies in case changed
 npm install --production
+
+# clean logs
 pod cleanlogs {{app}}
+
+# restart app
+# you can add NODE_ENV here
 pod restart {{app}}
