@@ -41,7 +41,7 @@ var pod = {
             + '\n'
             + '    config                    Print current global config\n'
             + '    config --key=value        Set a global config option\n'
-            + '    config <app>              Print current config for the app'
+            + '    config <app>              Print current config for the app\n'
             + '    config <app> --key=value  Set the app\'s config option\n'
             + '    config --reset            Reset all global options to default value\n'
             + '\n'
@@ -57,7 +57,11 @@ var pod = {
             + '    env                       Overrides global env\n'
             + '    script                    Overrides global script\n'
             + '    port                      Set process.env.PORT\n'
-            + '                              If not set, will attempt to sniff port with regex\n'
+            + '\n'
+            + '  Note - You can also use app options with the following commands:\n'
+            + '\n'
+            + '    create\n'
+            + '    start\n'
         } else {
             usage = '\n'
             + ('  Pod - version ' + require('../package.json').version + '\n').cyan
@@ -84,23 +88,43 @@ var pod = {
         console.log(usage)
     },
 
-    config: function () {
-        for (var op in config) {
-            console.log(op.cyan + spaces(10 - op.length) + config[op])
+    config: function (appname) {
+        if (argv.reset) {
+            initConfig()
+            return
+        }
+        var options = checkOptions()
+        if (options) {
+            setConfig(appname, options, function () {
+                log((appname ? appname.yellow : 'global') + ' config updated.')
+            })
+        } else {
+            printConfig(appname)
         }
     },
 
     create: function (appname) {
         if (!appname) return
         
-        var repo = config.dir + '/repos/' + appname + '.git',
+        var appConfPath = configPath + '/app-configs/' + appname,
+            repo = config.dir + '/repos/' + appname + '.git',
             work = config.dir + '/apps/' + appname,
             logDir = config.dir + '/logs/' + appname
 
-        if (fs.existsSync(repo) || fs.existsSync(work)) {
+        if (fs.existsSync(appConfPath)) {
             warn('an app with that name already exists.')
             return
         }
+
+        // create config file
+        var appConf = {
+            env: argv.env ? argv.env : '',
+            script: argv.script ? argv.script : '',
+            port: argv.port ? argv.port : ''
+        }
+        fs.writeFile(appConfPath, formatJSON(JSON.stringify(appConf)), function(err) {
+            if (err) console.error(err)
+        })
 
         // create log folder
         fs.mkdir(logDir, function (err) {
@@ -137,21 +161,17 @@ var pod = {
 
         if (!appname) return
 
-        var repo = config.dir + '/repos/' + appname + '.git',
+        var conf = configPath + '/app-configs/' + appname,
+            repo = config.dir + '/repos/' + appname + '.git',
             work = config.dir + '/apps/' + appname,
             logDir = config.dir + '/logs/' + appname
-
-        if (!fs.existsSync(repo) && !fs.existsSync(work)) {
-            warn('cannot find app ' + appname.yellow)
-            return
-        }
 
         prompt('Really delete app \'' + appname + '\'? (y/n)', function (res) {
             if (res === 'y') {
                 // stop it first
                 pod.stop(appname)
                 // fs.rmdir can't -rf
-                exec('rm -rf ' + repo + ' ' + work + ' ' + logDir, function (err) {
+                exec('rm -rf ' + conf + ' ' + repo + ' ' + work + ' ' + logDir, function (err) {
                     if (err) {
                         warn(err)
                     } else {
@@ -225,7 +245,7 @@ var pod = {
             } else {
                 var longest = getLongestName(apps)
                 apps.forEach(function (app) {
-                    var script = config.dir + '/apps/' + app + '/' + config.appfile,
+                    var script = config.dir + '/apps/' + app + '/' + config.script,
                         port = sniffPort(script),
                         status = isRunning(list, script) ? 'ON'.green : 'OFF'.red
                     console.log('⚑ ' + app.yellow + spaces(longest - app.length) + ' - ' + status + port)
@@ -255,11 +275,11 @@ var pod = {
     start: function (appname, list) {
         if (!appname) return
 
-        var script = config.dir + '/apps/' + appname + '/' + config.appfile,
+        var script = config.dir + '/apps/' + appname + '/' + config.script,
             logDir = config.dir + '/logs/' + appname
 
         if (!fs.existsSync(script)) {
-            warn('cannot locate ' + appfile + ' for ' + appname.yellow)
+            warn('cannot locate ' + script + ' for ' + appname.yellow)
             return
         }
 
@@ -296,7 +316,7 @@ var pod = {
     stop: function (appname) {
         if (!appname) return
 
-        var script = config.dir + '/apps/' + appname + '/' + config.appfile,
+        var script = config.dir + '/apps/' + appname + '/' + config.script,
             runner = forever.stop(script)
 
         runner.on('stop', function () {
@@ -311,7 +331,7 @@ var pod = {
     restart: function (appname) {
         if (!appname) return
 
-        var script = config.dir + '/apps/' + appname + '/' + config.appfile,
+        var script = config.dir + '/apps/' + appname + '/' + config.script,
             runner = forever.restart(script)
 
         runner.on('restart', function () {
@@ -346,7 +366,7 @@ var pod = {
         var runner = forever.stopAll()
         runner.on('stopAll', function (processes) {
             if (processes && processes.length) {
-                var appnameRE = new RegExp(config.dir + '/apps/(.+)/' + config.appfile)
+                var appnameRE = new RegExp(config.dir + '/apps/(.+)/' + config.script)
                 log('stopped:')
                 processes.forEach(function (p) {
                     var match = p.file.match(appnameRE)
@@ -365,7 +385,7 @@ var pod = {
         var runner = forever.restartAll()
         runner.on('restartAll', function (processes) {
             if (processes && processes.length) {
-                var appnameRE = new RegExp(config.dir + '/apps/(.+)/' + config.appfile)
+                var appnameRE = new RegExp(config.dir + '/apps/(.+)/' + config.script)
                 log('restarted:')
                 processes.forEach(function (p) {
                     var match = p.file.match(appnameRE)
@@ -395,17 +415,22 @@ function init () {
 }
 
 function initConfig () {
-    prompt('Where do you want OK to keep all its stuff?', function (res) {
+    prompt('Where do you want Pod to keep all its stuff?', function (res) {
         res = path.resolve(cwd, res)
         if (fs.existsSync(res) && isDir(res)) {
             config.dir = res
             // default values
+            config.env = 'development'
             config.script = 'app.js'
             config.editor = process.env.VISUAL || process.env.EDITOR || 'vi'
-            config.env = 'development'
 
-            writeConfig(function () {
-                log('created global config file: ' + (process.env.HOME + '/.podconfig/global.json').yellow)
+            if (!fs.existsSync(configPath)) {
+                fs.mkdirSync(configPath)
+                fs.mkdirSync(configPath + '/app-configs')
+            }
+
+            setConfig(null, config, function () {
+                log('write global config file: ' + (configPath + '/global.json').yellow)
                 var apps = config.dir + '/apps',
                     repos = config.dir + '/repos'
                     logs = config.dir + '/logs'
@@ -439,7 +464,6 @@ function parseCommand () {
 
 // TODO make this read all existing hooks in ../hooks
 function createHook (appname, repo, work) {
-
     var hook = repo + '/hooks/post-receive'
     var data = fs.readFileSync(__dirname + '/../hooks/post-receive', 'utf-8')
         .replace(/\{\{pod_dir\}\}/g, config.dir)
@@ -452,14 +476,51 @@ function createHook (appname, repo, work) {
             fs.chmodSync(hook, '0777')
         }
     })
-
 }
 
-function writeConfig (callback) {
-    if (!fs.existsSync(configPath)) {
-        fs.mkdirSync(configPath)
+function checkOptions () {
+    var hasOptions = false,
+        options = {}
+    for (var arg in argv) {
+        if (arg != '_' && arg != '$0') {
+            hasOptions = true
+            options[arg] = argv[arg]
+        }
     }
-    fs.writeFile(configPath + '/global.json', formatJSON(JSON.stringify(config)), function (err) {
+    if (hasOptions) return options
+}
+
+function printConfig (app) {
+
+    var conf
+    if (!app) {
+        conf = config
+    } else {
+        var file = configPath + '/app-configs/' + app
+        if (!fs.existsSync(file)) {
+            warn('cannot find config file for ' + app.yellow)
+            return
+        }
+        conf = JSON.parse(fs.readFileSync(file, 'utf-8'))
+    }
+
+    console.log('\n' + (app ? app.yellow : 'global'.red) + ' config:\n')
+    for (var op in conf) {
+        console.log('- ' + op.cyan + spaces(10 - op.length) + (conf[op] ? conf[op] : 'undefined'))
+    }
+    console.log()
+}
+
+function setConfig (app, options, callback) {
+    
+    var file = app ?  (configPath + '/app-configs/' + app) : (configPath + '/global.json'),
+        current = app ? JSON.parse(fs.readFileSync(file, 'utf-8')) : config
+
+    for (var op in options) {
+        if (op in current) current[op] = options[op]
+    }
+
+    fs.writeFile(file, formatJSON(JSON.stringify(current)), function (err) {
         if (err) {
             warn(err)
         } else {
