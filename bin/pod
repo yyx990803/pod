@@ -31,34 +31,55 @@ var config = {},
 
 var pod = {
 
-    help: function () {
-        var usage = '\n'
+    help: function (topic) {
+
+        var usage
+
+        if (topic === 'config') {
+            usage ='\n'
+            + '  Usage:\n'
+            + '\n'
+            + '    config                    Print current global config\n'
+            + '    config --key=value        Set a global config option\n'
+            + '    config <app> --key=value  Set an app\'s config option\n'
+            + '    config --reset            Reset all global options to default value\n'
+            + '\n'
+            + '  Global Options:\n'
+            + '\n'
+            + '    dir                       Directory to hold the repos, apps and logs\n'
+            + '    editor                    The editor to use when editing hook scripts\n'
+            + '    env                       Set process.env.NODE_ENV\n'
+            + '    script                    The main script to look for in each app\n'
+            + '\n'
+            + '  App Options:\n'
+            + '\n'
+            + '    env                       Overrides global env\n'
+            + '    script                    Overrides global script\n'
+            + '    port                      Set process.env.PORT\n'
+            + '                              If not set, will attempt to sniff port with regex\n'
+        } else {
+            usage = '\n'
             + ('  Pod - version ' + require('../package.json').version + '\n').cyan
             + '\n'
             + '  Usage: pod [command]\n'
             + '\n'
             + '  Commands:\n'
             + '\n'
-            + '    create <appname>        Create a new app\n'
-            + '    rm <appname>            Delete an app\n'
-            + '    cleanlogs <appname>     Clean up logs for an app\n'
-            + '    edit <appname>          Edit the app\'s post-receive hook\n'
+            + '    create <app>            Create a new app\n'
+            + '    rm <app>                Delete an app\n'
+            + '    cleanlogs <app>         Clean up logs for an app\n'
+            + '    edit <app>              Edit the app\'s post-receive hook\n'
             + '    list [-p]               List apps and status. [-p] = List processes\n'
-            + '    config                  Print current config options\n'
-            + '    set <key> <val>         Set a config option\n'
-            + '    start <appname>         Start an app with forever\n'
-            + '    stop <appname>          Stop an app\n'
-            + '    restart <appname>       Restart an app, start if not already running\n'
+            + '    start <app>             Start an app with forever\n'
+            + '    stop <app>              Stop an app\n'
+            + '    restart <app>           Restart an app, start if not already running\n'
             + '    startall                Start all apps not already running\n'
             + '    stopall                 Stop all apps\n'
             + '    restartall              Restart all running apps\n'
             + '    help                    You are reading it right now\n'
-            + '\n'
-            + '  Config:\n'
-            + '\n'
-            + '    dir                     Directory to hold the repos, apps and logs\n'
-            + '    appfile                 The main file to look for in each app\n'
-            + '    editor                  The editor to use when editing hook scripts\n'
+            + '    config [options]        Type ' +'pod help config'.cyan + ' for detailed usage\n'
+        }
+
         console.log(usage)
     },
 
@@ -361,15 +382,15 @@ var pod = {
 }
 
 // INIT
-
-if (fs.existsSync(configPath)) {
-    // load existing config file
-    config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
-    parseCommand()
-} else {
-    // otherwise init a new config
-    console.log('No .podconfig found.')
-    initConfig()
+function init () {
+    var mainConfig = configPath + '/global.json'
+    if (fs.existsSync(mainConfig)) {
+        config = JSON.parse(fs.readFileSync(mainConfig, 'utf-8'))
+        parseCommand()
+    } else {
+        console.log('No global config file found.')
+        initConfig()
+    }
 }
 
 function initConfig () {
@@ -378,11 +399,12 @@ function initConfig () {
         if (fs.existsSync(res) && isDir(res)) {
             config.dir = res
             // default values
-            config.appfile = 'app.js'
+            config.script = 'app.js'
             config.editor = process.env.VISUAL || process.env.EDITOR || 'vi'
+            config.env = 'development'
 
             writeConfig(function () {
-                log('created new .podconfig in ' + process.env.HOME.yellow)
+                log('created global config file: ' + (process.env.HOME + '/.podconfig/global.json').yellow)
                 var apps = config.dir + '/apps',
                     repos = config.dir + '/repos'
                     logs = config.dir + '/logs'
@@ -433,7 +455,10 @@ function createHook (appname, repo, work) {
 }
 
 function writeConfig (callback) {
-    fs.writeFile(configPath, formatJSON(JSON.stringify(config)), function (err) {
+    if (!fs.existsSync(configPath)) {
+        fs.mkdirSync(configPath)
+    }
+    fs.writeFile(configPath + '/global.json', formatJSON(JSON.stringify(config)), function (err) {
         if (err) {
             warn(err)
         } else {
@@ -564,3 +589,5 @@ function getLongestName (apps) {
     })
     return longest
 }
+
+init()
