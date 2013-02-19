@@ -20,13 +20,13 @@ start on startup
 exec sudo -u <username> /path/to/node /path/to/pod startall
 ```
 
-The first time you run `pod` it will ask you where you want to put your stuff. The structure of the directory looks like this:
+The first time you run `pod` it will ask you where you want to put your stuff. The structure of the given directory will look like this:
 
 ```
 pod_dir/
     repos/                  - holds the bare .git repos
         example.git
-    apps/                   - holds the working trees
+    apps/                   - holds the working copies
         example/
     logs/                   - holds the logs
         example/

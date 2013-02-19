@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-// TODO: save info for each app created
-// allow config for each app:
+// TODO:
+// - make ~/.podconfig a folder and hold info for each app created
+// - allow config for each app:
 //   pod config appname --node_env=production --port=8888 --script=app.js
 
 var fs      = require('fs'),
