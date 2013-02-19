@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+// TODO: save info for each app created
+
 var fs      = require('fs'),
     exec    = require('child_process').exec,
     path    = require('path'),
@@ -7,7 +9,8 @@ var fs      = require('fs'),
     colors  = require('colors'),
     cwd     = process.cwd()
 
-var forever, // lazy load so commands that doesn't need it runs faster
+// lazy load so commands that doesn't need it runs faster
+var forever,
     foreverTasks = [
         'rm',
         'list',
@@ -149,7 +152,7 @@ var pod = {
             file = logDir + '/' + file
             fs.exists(file, function (exist) {
                 if (exist) {
-                    fs.unlink(file, function (err) {
+                    fs.writeFile(file, '', function (err) {
                         if (!err) {
                             done()
                         } else {
