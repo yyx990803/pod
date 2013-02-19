@@ -22,17 +22,17 @@ exec sudo -u <username> /path/to/node /path/to/pod startall
 
 The first time you run `pod` it will ask you where you want to put your stuff. The structure of the given directory will look like this:
 
-```
-pod_dir/
-    repos/                  - holds the bare .git repos
-        example.git
-    apps/                   - holds the working copies
-        example/
-    logs/                   - holds the logs
-        example/
-            forever.log
-            stdout.log
-            stderr.log
+``` bash
+.
+├── repos # holds the bare .git repos
+│   └── example.git
+├── apps # holds the working copies
+│   └── example
+└── logs # holds the logs
+    └── example
+        ├── forever.log
+        ├── stdout.log
+        └── stderr.log
 ```
 
 ### Usage
@@ -43,20 +43,19 @@ pod_dir/
 
   Commands:
 
-    create <appname>        Create a new app
-    rm <appname>            Delete an app
-    cleanlogs <appname>     Clean up logs for an app
-    edit <appname>          Edit the app's post-receive hook
+    create <app>            Create a new app
+    rm <app>                Delete an app
+    cleanlogs <app>         Clean up logs for an app
+    edit <app>              Edit the app's post-receive hook
     list [-p]               List apps and status. [-p] = List processes
-    config                  Print current config options
-    set <key> <val>         Set a config option
-    start <appname>         Start an app with forever
-    stop <appname>          Stop an app
-    restart <appname>       Restart an app, start if not already running
+    start <app>             Start an app with forever
+    stop <app>              Stop an app
+    restart <app>           Restart an app, start if not already running
     startall                Start all apps not already running
     stopall                 Stop all apps
     restartall              Restart all running apps
     help                    You are reading it right now
+    config [options]        Type pod help config for detailed usage
 
 ```
 
@@ -64,9 +63,31 @@ pod_dir/
 
 ```
 
-    dir                     Directory to hold the repos, apps and logs
-    appfile                 The main file to look for in each app. Default is 'app.js'
-    editor                  The editor to use when editing hook scripts
+  Usage:
+
+    config                    Print current global config
+    config --key=value        Set a global config option
+    config <app>              Print current config for the app
+    config <app> --key=value  Set the app's config option
+    config --reset            Reset all global options to default value
+
+  Global Options:
+
+    dir                       Directory to hold the repos, apps and logs
+    editor                    The editor to use when editing hook scripts
+    env                       Set process.env.NODE_ENV
+    script                    The main script to look for in each app
+
+  App Options:
+
+    env                       Overrides global env
+    script                    Overrides global script
+    port                      Set process.env.PORT
+
+  Note - You can also use app options with the following commands:
+
+    create
+    start
     
 ```
 
@@ -75,7 +96,9 @@ pod_dir/
 On the server:
 
 ``` bash
-$ pod create myapp # will print path to repo and working tree
+# options are optional. if not set they will inherit global values
+$ pod create myapp --env=production --port=8080
+# will print path to repo and working tree
 ```
 
 On your local machine:
@@ -93,10 +116,8 @@ $ git remote add deploy ssh://username@host[:port]/pod_dir/repos/myapp.git
 $ git push deploy master
 ```
 
-### Things to Know
-
-The default script that `pod` looks for in each app is `app.js`. You can change this with `pod set appfile <filename>`.  
+### That's it!
 
 App should be automatically running after the push. For later pushes, app process will be restarted.  
 
-You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push, e.g. add `NODE_ENV=production` before `pod restart {{app}}`.
+You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push.
