@@ -152,7 +152,7 @@ var pod = {
             file = logDir + '/' + file
             fs.exists(file, function (exist) {
                 if (exist) {
-                    fs.writeFile(file, 'restart at ' + Date.now(), 'utf-8', function (err) {
+                    fs.writeFile(file, 'restart at ' + Date.now() + '\n', 'utf-8', function (err) {
                         if (!err) {
                             done()
                         } else {
