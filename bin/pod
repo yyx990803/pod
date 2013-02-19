@@ -12,9 +12,6 @@ var fs      = require('fs'),
     colors  = require('colors'),
     cwd     = process.cwd()
 
-console.log(argv.node_env)
-console.log(argv.port)
-
 // lazy load so commands that doesn't need it runs faster
 var forever,
     foreverTasks = [
