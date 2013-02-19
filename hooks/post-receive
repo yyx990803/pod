@@ -11,4 +11,4 @@ npm install --production
 pod cleanlogs {{app}}
 
 # restart app
-NODE_ENV=production pod restart {{app}}
+pod restart {{app}}
