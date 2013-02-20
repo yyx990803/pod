@@ -92,6 +92,7 @@ var pod = {
         if (options) {
             setConfig(appname, options, function () {
                 log((appname ? appname.yellow : 'global') + ' config updated.')
+                printConfig(appname)
             })
         } else {
             printConfig(appname)
@@ -509,11 +510,10 @@ function printConfig (app) {
         conf = JSON.parse(fs.readFileSync(file, 'utf-8'))
     }
 
-    console.log('\n' + (app ? app.yellow : 'global'.red) + ' config:\n')
+    console.log((app ? app.yellow : 'global'.red) + ' config:')
     for (var op in conf) {
         console.log('- ' + op.cyan + spaces(10 - op.length) + (conf[op] ? conf[op] : 'undefined'))
     }
-    console.log()
 }
 
 function setConfig (app, options, callback) {
