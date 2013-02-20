@@ -536,7 +536,7 @@ function setConfig (app, options, callback) {
 
 function getAppConfig (app) {
     var file = configPath + '/app-configs/' + app
-    if (!fs.existsSync(app)) {
+    if (!fs.existsSync(file)) {
         warn('cannot find config file for ' + app.yellow)
         process.exit(1)
     } else {
