@@ -272,7 +272,7 @@ var pod = {
         if (!appname) return
 
         var appConf = getAppConfig(appname),
-            script = config.dir + '/apps/' + appname + '/' + (appConf.script || config.script),
+            script = config.dir + '/apps/' + appname + '/' + (argv.script || appConf.script || config.script),
             logDir = config.dir + '/logs/' + appname
 
         if (!fs.existsSync(script)) {
@@ -298,8 +298,8 @@ var pod = {
                 console.log(appname + ' already running.')
             } else {
                 // apply configs
-                if (appConf.port) process.env.PORT = appConf.port
-                process.env.NODE_ENV = appConf.env || config.env
+                if (appConf.port) process.env.PORT = argv.port || appConf.port
+                process.env.NODE_ENV = argv.env || appConf.env || config.env
 
                 // start daemon
                 forever.startDaemon(script, {
