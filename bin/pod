@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
-// TODO:
-// - make ~/.podconfig a folder and hold info for each app created
-// - allow config for each app:
-//   pod config appname --node_env=production --port=8888 --script=app.js
+// TODO
+// list, start
 
 var fs      = require('fs'),
     exec    = require('child_process').exec,
@@ -245,8 +243,9 @@ var pod = {
             } else {
                 var longest = getLongestName(apps)
                 apps.forEach(function (app) {
-                    var script = config.dir + '/apps/' + app + '/' + config.script,
-                        port = sniffPort(script),
+                    var appConf = getAppConfig(app),
+                        script = config.dir + '/apps/' + app + '/' + (appConf.script || config.script),
+                        port = ' : ' + (appConf.port || sniffPort(script)),
                         status = isRunning(list, script) ? 'ON'.green : 'OFF'.red
                     console.log('⚑ ' + app.yellow + spaces(longest - app.length) + ' - ' + status + port)
                 })
@@ -275,11 +274,12 @@ var pod = {
     start: function (appname, list) {
         if (!appname) return
 
-        var script = config.dir + '/apps/' + appname + '/' + config.script,
+        var appConf = getAppConfig(appname),
+            script = config.dir + '/apps/' + appname + '/' + (appConf.script || config.script),
             logDir = config.dir + '/logs/' + appname
 
         if (!fs.existsSync(script)) {
-            warn('cannot locate ' + script + ' for ' + appname.yellow)
+            warn('cannot locate ' + config.script + ' for ' + appname.yellow)
             return
         }
 
@@ -300,6 +300,11 @@ var pod = {
             if (isRunning(list, script)) {
                 console.log(appname + ' already running.')
             } else {
+                // apply configs
+                if (appConf.port) process.env.PORT = appConf.port
+                process.env.NODE_ENV = appConf.env || config.env
+
+                // start daemon
                 forever.startDaemon(script, {
                     max: 3,
                     logFile: logDir + '/forever.log',
@@ -307,8 +312,8 @@ var pod = {
                     outFile: logDir + '/stdout.log',
                     append: true
                 })
-                var port = sniffPort(script)
-                log(appname.yellow + ' running' + (port ? (' on port' + port) : ''))
+                var port = appConf.port || sniffPort(script)
+                log(appname.yellow + ' running' + (port ? (' on port ' + port) : ''))
             }
         }
     },
@@ -316,7 +321,8 @@ var pod = {
     stop: function (appname) {
         if (!appname) return
 
-        var script = config.dir + '/apps/' + appname + '/' + config.script,
+        var appConf = getAppConfig(appname),
+            script = config.dir + '/apps/' + appname + '/' + (appConf.script || config.script),
             runner = forever.stop(script)
 
         runner.on('stop', function () {
@@ -331,14 +337,16 @@ var pod = {
     restart: function (appname) {
         if (!appname) return
 
-        var script = config.dir + '/apps/' + appname + '/' + config.script,
+        var appConf = getAppConfig(appname),
+            script = config.dir + '/apps/' + appname + '/' + (appConf.script || config.script),
             runner = forever.restart(script)
 
         runner.on('restart', function () {
             log(appname.yellow + ' restarted.')
         })
 
-        runner.on('error', function () {
+        runner.on('error', function (err) {
+            console.log(err)
             log(appname.yellow + ' is not running, starting instead...')
             pod.start(appname)
         })
@@ -529,34 +537,18 @@ function setConfig (app, options, callback) {
     })
 }
 
-function findApps () {
-
-    var repos,
-        works,
-        apps = []
-
-    // get repos
-    repos = fs.readdirSync(config.dir + '/repos').filter(function (r) {
-        return r.match(/\b.*\.git\b/g)
-    })
-
-    if (!repos) {
-        console.log('no apps found.')
-        return
+function getAppConfig (app) {
+    var file = configPath + '/app-configs/' + app
+    if (!fs.existsSync(app)) {
+        warn('cannot find config file for ' + app.yellow)
+        process.exit(1)
+    } else {
+        return JSON.parse(fs.readFileSync(file, 'utf-8'))
     }
+}
 
-    // get working copies
-    works = fs.readdirSync(config.dir + '/apps')
-
-    // make sure an app has both the git repo and the working copy
-    repos.forEach(function (r) {
-        var name = r.slice(0, -4)
-        if (works.indexOf(name) !== -1) {
-            apps.push(name)
-        }
-    })
-
-    return apps
+function findApps () {
+    return fs.readdirSync(configPath + '/app-configs')
 }
 
 function sniffPort (script) {
@@ -564,7 +556,7 @@ function sniffPort (script) {
         // sniff port
         var content = fs.readFileSync(script, 'utf-8'),
             port = content.match(/\.listen\(([0-9]+)\)/)[1]
-        return port ? (' : ' + port) : ''
+        return port ? port : ''
     } else {
         return ''
     }
