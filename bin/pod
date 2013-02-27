@@ -6,7 +6,7 @@ var fs      = require('fs'),
     argv    = require('optimist').argv,
     colors  = require('colors'),
     cwd     = process.cwd()
-
+    
 // lazy load so commands that doesn't need it runs faster
 var forever,
     foreverTasks = [

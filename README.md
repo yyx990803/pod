@@ -30,6 +30,7 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
 │   └── example.git
 ├── apps # holds the working copies
 │   └── example
+│       └──app.js
 └── logs # holds the logs
     └── example
         ├── forever.log
