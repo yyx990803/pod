@@ -7,8 +7,7 @@ env -i git pull
 # install dependencies in case changed
 npm install --production
 
-# clean logs
+# pod restart will not use latest env variables in config
+pod stop {{app}}
 pod cleanlogs {{app}}
-
-# restart app
-pod restart {{app}}
+pod start {{app}}
