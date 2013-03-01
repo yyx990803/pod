@@ -1,0 +1,19 @@
+
+  Usage: pod [command]
+
+  Commands:
+
+    create <app>            Create a new app
+    rm <app>                Delete an app
+    cleanlogs <app>         Clean up logs for an app
+    edit <app>              Edit the app's post-receive hook
+    list [-p]               List apps and status. [-p] = List processes
+    start <app>             Start an app with forever
+    stop <app>              Stop an app
+    restart <app>           Restart an app, start if not already running
+    startall                Start all apps not already running
+    stopall                 Stop all apps
+    restartall              Restart all running apps
+    help                    You are reading it right now
+    config [options]        Type pod help config for detailed usage
+    

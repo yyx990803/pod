@@ -6,7 +6,7 @@ var fs      = require('fs'),
     argv    = require('optimist').argv,
     colors  = require('colors'),
     cwd     = process.cwd()
-
+    
 // lazy load so commands that doesn't need it runs faster
 var forever,
     foreverTasks = [
@@ -27,60 +27,8 @@ var config = {},
 var pod = {
 
     help: function (topic) {
-
-        var usage
-
-        if (topic === 'config') {
-            usage ='\n'
-            + '  Usage:\n'
-            + '\n'
-            + '    config                    Print current global config\n'
-            + '    config --key=value        Set a global config option\n'
-            + '    config <app>              Print current config for the app\n'
-            + '    config <app> --key=value  Set the app\'s config option\n'
-            + '    config --reset            Reset all global options to default value\n'
-            + '\n'
-            + '  Global Options:\n'
-            + '\n'
-            + '    dir                       Directory to hold the repos, apps and logs\n'
-            + '    editor                    The editor to use when editing hook scripts\n'
-            + '    env                       Set process.env.NODE_ENV\n'
-            + '    script                    The main script to look for in each app\n'
-            + '\n'
-            + '  App Options:\n'
-            + '\n'
-            + '    env                       Overrides global env\n'
-            + '    script                    Overrides global script\n'
-            + '    port                      Set process.env.PORT\n'
-            + '\n'
-            + '  Note - You can also use app options with the following commands:\n'
-            + '\n'
-            + '    create\n'
-            + '    start\n'
-        } else {
-            usage = '\n'
-            + ('  Pod - version ' + require('../package.json').version + '\n').cyan
-            + '\n'
-            + '  Usage: pod [command]\n'
-            + '\n'
-            + '  Commands:\n'
-            + '\n'
-            + '    create <app>            Create a new app\n'
-            + '    rm <app>                Delete an app\n'
-            + '    cleanlogs <app>         Clean up logs for an app\n'
-            + '    edit <app>              Edit the app\'s post-receive hook\n'
-            + '    list [-p]               List apps and status. [-p] = List processes\n'
-            + '    start <app>             Start an app with forever\n'
-            + '    stop <app>              Stop an app\n'
-            + '    restart <app>           Restart an app, start if not already running\n'
-            + '    startall                Start all apps not already running\n'
-            + '    stopall                 Stop all apps\n'
-            + '    restartall              Restart all running apps\n'
-            + '    help                    You are reading it right now\n'
-            + '    config [options]        Type ' +'pod help config'.cyan + ' for detailed usage\n'
-        }
-
-        console.log(usage)
+        topic = (topic === 'config' ? topic : 'usage')
+        console.log(fs.readFileSync(__dirname + '/../help/' + topic, 'utf-8'))
     },
 
     config: function (appname) {
