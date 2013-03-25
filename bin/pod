@@ -66,7 +66,7 @@ var pod = {
             script: argv.script ? argv.script : '',
             port: argv.port ? argv.port : ''
         }
-        fs.writeFile(appConfPath, formatJSON(JSON.stringify(appConf)), function(err) {
+        fs.writeFile(appConfPath, JSON.stringify(appConf, null, 4), function(err) {
             if (err) console.error(err)
         })
 
@@ -473,7 +473,7 @@ function setConfig (app, options, callback) {
         if (op in current) current[op] = options[op]
     }
 
-    fs.writeFile(file, formatJSON(JSON.stringify(current)), function (err) {
+    fs.writeFile(file, JSON.stringify(current, null, 4), function (err) {
         if (err) {
             warn(err)
         } else {
@@ -545,40 +545,6 @@ function spaces (length) {
         ret += ' '
     }
     return ret
-}
-
-function formatJSON (val) {
-    var retval = '',
-        str = val,
-        pos = 0,
-        strLen = str.length,
-        indentStr = '    ',
-        newLine = '\n',
-        char = ''
-    
-    for (var i=0; i<strLen; i++) {
-        char = str.substring(i, i + 1)
-        if (char === '}' || char === ']') {
-            retval = retval + newLine
-            pos = pos - 1
-            
-            for (var j=0; j<pos; j++) {
-                retval = retval + indentStr
-            }
-        }
-        if (char === ':') char = char + ' '
-        retval = retval + char;
-        if (char === '{' || char === '[' || char === ',') {
-            retval = retval + newLine
-            if (char === '{' || char === '[') {
-                pos = pos + 1
-            }
-            for (var k=0; k<pos; k++) {
-                retval = retval + indentStr
-            }
-        }
-    }
-    return retval
 }
 
 function getLongestName (apps) {
