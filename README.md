@@ -6,11 +6,11 @@ Pod simplifies the workflow of setting up, updating and managing multiple Node.j
 
 It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but you can use pod to run a [node-http-proxy](https://github.com/nodejitsu/node-http-proxy) server on port 80 that routes incoming requests to other apps.
 
-### Prerequisites
+## Prerequisites
 
 All you need is Node, git, and a ssh account.
 
-### Example Workflow
+## Example Workflow
 
 **On the server:**
 
@@ -38,7 +38,7 @@ That's it! App should be automatically running after the push. For later pushes,
 
 You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push.
 
-### Installation
+## Installation
 
 ``` bash
 $ [sudo] npm install -g pod
@@ -68,7 +68,7 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
         └── stderr.log
 ```
 
-### Usage
+## Usage
 
 ```
 
@@ -92,7 +92,7 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
 
 ```
 
-### Config
+## Config
 
 ```
 
