@@ -10,6 +10,34 @@ It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but y
 
 All you need is Node, git, and a ssh account.
 
+### Example Workflow
+
+**On the server:**
+
+``` bash
+$ pod create myapp
+# will print path to repo and working tree
+```
+
+**On your local machine:**
+
+``` bash
+$ git clone ssh://your-server/pod_dir/myapp.git
+# hack hack hack, commit
+$ git push
+```
+
+**Or use an existing local repo:**
+
+``` bash
+$ git remote add deploy ssh://your-server/pod_dir/myapp.git
+$ git push deploy master
+```
+
+That's it! App should be automatically running after the push. For later pushes, app process will be restarted.  
+
+You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push.
+
 ### Installation
 
 ``` bash
@@ -95,34 +123,3 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
     start
     
 ```
-
-### Workflow
-
-On the server:
-
-``` bash
-# options are optional. if not set they will inherit global values
-$ pod create myapp --env=production --port=8080
-# will print path to repo and working tree
-```
-
-On your local machine:
-
-``` bash
-$ git clone ssh://username@host[:port]/pod_dir/repos/myapp.git
-# hack hack hack, commit
-$ git push
-```
-
-Or use an existing local repo:
-
-``` bash
-$ git remote add deploy ssh://username@host[:port]/pod_dir/repos/myapp.git
-$ git push deploy master
-```
-
-### That's it!
-
-App should be automatically running after the push. For later pushes, app process will be restarted.  
-
-You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push.
