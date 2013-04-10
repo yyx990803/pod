@@ -1,5 +1,3 @@
 .DS_Store
 node_modules
-test/apps
-test/logs
-test/repos
+test
