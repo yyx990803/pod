@@ -5,7 +5,9 @@ cd {{pod_dir}}/apps/{{app}}
 env -i git pull
 
 # install dependencies in case changed
-npm install --production
+[ -f package.json ] && npm install
+[ -f component.json ] && component install
+[ -f Gruntfile.js ] && grunt
 
 # pod restart will not use latest env variables in config
 pod stop {{app}}
