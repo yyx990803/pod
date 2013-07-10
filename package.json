@@ -1,37 +1,37 @@
 {
-    "name": "pod",
-    "version": "0.2.0",
-    "preferGlobal": "true",
-    "author": {
-        "name": "Evan You",
-        "email": "yyx990803@gmail.com"
-    },
-    "dependencies": {
-        "optimist": ">= 0.3.5",
-        "forever": ">= 0.10.0",
-        "colors": ">= 0.6.0"
-    },
-    "devDependencies": {
-        "mocha": ">= 1.7.0",
-        "should": ">= 1.2.1"
-    },
-    "keywords": [
-        "cli",
-        "deployment",
-        "sysadmin",
-        "tools"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "http://github.com/yyx990803/pod.git"
-    },
-    "bin": {
-        "pod": "./bin/pod"
-    },
-    "engines": {
-        "node": ">= 0.8.x"
-    },
-    "description": "Super simple Node.js deployment tool",
-    "readme": "Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server.",
-    "readmeFilename": "README.md"
+  "name": "pod",
+  "version": "0.2.1",
+  "preferGlobal": "true",
+  "author": {
+    "name": "Evan You",
+    "email": "yyx990803@gmail.com"
+  },
+  "dependencies": {
+    "optimist": "~0.6.0",
+    "forever": "~0.10.8",
+    "colors": "~0.6.0"
+  },
+  "devDependencies": {
+    "mocha": "~1.7.0",
+    "should": "~1.2.1"
+  },
+  "keywords": [
+    "cli",
+    "deployment",
+    "sysadmin",
+    "tools"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/yyx990803/pod.git"
+  },
+  "bin": {
+    "pod": "./bin/pod"
+  },
+  "engines": {
+    "node": ">= 0.8.x"
+  },
+  "description": "Super simple Node.js deployment tool",
+  "readme": "Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server.",
+  "readmeFilename": "README.md"
 }
