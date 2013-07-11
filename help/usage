@@ -15,5 +15,5 @@
     stopall                 Stop all apps
     restartall              Restart all running apps
     help                    You are reading it right now
-    config [options]        Type pod help config for detailed usage
+    config [app]            Edit global or app configs
     

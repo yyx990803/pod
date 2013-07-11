@@ -88,38 +88,6 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
     stopall                 Stop all apps
     restartall              Restart all running apps
     help                    You are reading it right now
-    config [options]        Type pod help config for detailed usage
+    config [app]            Edit global or app configs
 
-```
-
-## Config
-
-```
-
-  Usage:
-
-    config                    Print current global config
-    config --key=value        Set a global config option
-    config <app>              Print current config for the app
-    config <app> --key=value  Set the app's config option
-    config --reset            Reset all global options to default value
-
-  Global Options:
-
-    dir                       Directory to hold the repos, apps and logs
-    editor                    The editor to use when editing hook scripts
-    env                       Set process.env.NODE_ENV
-    script                    The main script to look for in each app
-
-  App Options:
-
-    env                       Overrides global env
-    script                    Overrides global script
-    port                      Set process.env.PORT
-
-  Note - You can also use app options with the following commands:
-
-    create
-    start
-    
 ```
