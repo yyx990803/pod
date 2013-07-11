@@ -1,4 +1,4 @@
-# POD - super simple Node.js deployment tool
+# POD - git push deploy for Node.js
 
 **WARNING:** test suite not complete, use with caution!
 

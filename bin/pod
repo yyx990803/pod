@@ -32,13 +32,12 @@ var pod = {
     },
 
     config: function (appname) {
-        var app = getAppInfo(appname)
         if (argv.reset) {
             initConfig()
         } else {
             edit(
                 appname
-                ? app.configPath
+                ? getAppInfo(appname).configPath
                 : (configPath + '/global.json')
             )
         }
