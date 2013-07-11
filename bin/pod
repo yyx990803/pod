@@ -507,7 +507,9 @@ function getLongestName (apps) {
 
 function edit (file, callback) {
     process.stdin.setRawMode(true)
-    var p = require('child_process').spawn(config.editor, [file])
+    var p = spawn(config.editor, [file], {
+        customFds: [ 0, 1, 2 ]
+    })
     p.on('exit', function () {
         process.stdin.setRawMode(false)
         callback && callback()
