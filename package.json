@@ -1,6 +1,6 @@
 {
   "name": "pod",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "preferGlobal": "true",
   "author": {
     "name": "Evan You",
@@ -12,8 +12,7 @@
     "colors": "~0.6.0"
   },
   "devDependencies": {
-    "mocha": "~1.7.0",
-    "should": "~1.2.1"
+    "mocha": "~1.12.0"
   },
   "keywords": [
     "cli",
@@ -31,7 +30,11 @@
   "engines": {
     "node": ">= 0.8.x"
   },
+  "main": "lib/pod.js",
   "description": "Super simple Node.js deployment tool",
   "readme": "Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server.",
-  "readmeFilename": "README.md"
+  "readmeFilename": "README.md",
+  "scripts": {
+    "test": "mocha test/test.js --reporter spec"
+  }
 }
