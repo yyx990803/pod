@@ -289,7 +289,7 @@ var pod = {
         var runner = forever.stopAll()
         runner.on('stopAll', function (processes) {
             if (processes && processes.length) {
-                var appnameRE = new RegExp(globalConfig.dir + '/apps/(.+)/.+\.js\b')
+                var appnameRE = new RegExp(globalConfig.dir + '/apps/(.+)/.+\.js')
                 log('stopped:')
                 processes.forEach(function (p) {
                     var match = p.file.match(appnameRE)
@@ -308,7 +308,7 @@ var pod = {
         var runner = forever.restartAll()
         runner.on('restartAll', function (processes) {
             if (processes && processes.length) {
-                var appnameRE = new RegExp(globalConfig.dir + '/apps/(.+)/.+\.js\b')
+                var appnameRE = new RegExp(globalConfig.dir + '/apps/(.+)/.+\.js')
                 log('restarted:')
                 processes.forEach(function (p) {
                     var match = p.file.match(appnameRE)
