@@ -23,7 +23,7 @@ var forever,
     ]
 
 var globalConfig = {},
-    globalConfigDirPath = process.env.HOME + '/.podconfig',
+    globalConfigDirPath = process.env.HOME + '/.podrc',
     globalConfigPath = globalConfigDirPath + '/global.json'
 
 var pod = {
@@ -334,38 +334,27 @@ function init () {
 function initConfig () {
     prompt('Where do you want Pod to keep all its stuff?', function (res) {
         res = path.resolve(cwd, res)
-        if (fs.existsSync(res) && isDir(res)) {
-            globalConfig.dir = res
-            // default values
-            globalConfig.env = 'development'
-            globalConfig.defaultScript = 'app.js'
-            globalConfig.editor = process.env.VISUAL || process.env.EDITOR || 'vi'
-
-            if (!fs.existsSync(configPath)) {
-                fs.mkdirSync(configPath)
-                fs.mkdirSync(configPath + '/app-configs')
+        if (fs.existsSync(res)) {
+            if (!isDir(res)) {
+                warn('target path ' + res.grey + ' is not a directory.')
+                process.exit(-1)
             }
-
-            setConfig(null, config, function () {
-                log('write global config file: ' + globalConfigPath.yellow)
-                var apps = globalConfig.dir + '/apps',
-                    repos = globalConfig.dir + '/repos'
-                    logs = globalConfig.dir + '/logs'
-                if (!fs.existsSync(apps)) fs.mkdirSync(apps)
-                if (!fs.existsSync(repos)) fs.mkdirSync(repos)
-                if (!fs.existsSync(logs)) fs.mkdirSync(logs)
-            })
+            initGlobalConfig(res)
+            makeDirs()
         } else {
-            console.log('invalid path.')
-            initConfig()
+            prompt('target path ' + res.grey + ' doesn\'t exist. create it? y/n', function (reply) {
+                if (reply === 'y') {
+                    fs.mkdirSync(res)
+                    initGlobalConfig(res)
+                    makeDirs()
+                }
+            })
         }
     })
 }
 
 function parseCommand () {
-
     var command = argv._[0] || 'help'
-
     if (pod[command]) {
         if (foreverTasks.indexOf(command) !== -1) {
             forever = require('forever/lib/forever')
@@ -376,45 +365,9 @@ function parseCommand () {
             warn('unknown command ' + command.red)
         }
     }
-
 }
 
-// TODO make this read all existing hooks in ../hooks
-function createHook (appname, repo, work) {
-    var hook = repo + '/hooks/post-receive'
-    var data = fs.readFileSync(__dirname + '/../hooks/post-receive', 'utf-8')
-        .replace(/\{\{pod_dir\}\}/g, globalConfig.dir)
-        .replace(/\{\{app\}\}/g, appname)
-
-    fs.writeFile(hook, data, function (err) {
-        if (err) {
-            warn(err)
-        } else {
-            fs.chmodSync(hook, '0777')
-        }
-    })
-}
-
-function setConfig (app, options, callback) {
-    
-    var file = app ?  (configPath + '/app-configs/' + app) : globalConfigPath,
-        current = app ? JSON.parse(fs.readFileSync(file, 'utf-8')) : globalConfig 
-    for (var op in options) {
-        if (op in current) current[op] = options[op]
-    }
-
-    fs.writeFile(file, JSON.stringify(current, null, 4), function (err) {
-        if (err) {
-            warn(err)
-        } else {
-            if (callback) callback()
-        }
-    })
-}
-
-function findApps () {
-    return fs.readdirSync(globalConfigDirPath + '/app-configs')
-}
+// The main app info collection function
 
 function getAppInfo (app, creating) {
     var info = {
@@ -433,6 +386,76 @@ function getAppInfo (app, creating) {
         info.port = info.config.port || sniffPort(info.script) || 'unknown port'
     }
     return info
+}
+
+// CLI interfacing
+
+function prompt (msg, callback) {
+    console.log(msg)
+    process.stdin.resume()
+    process.stdin.setEncoding('utf8')
+    process.stdin.on('data', function (input) {
+        process.stdin.pause()
+        callback(input.replace(/\n/g, ''))
+    })
+}
+
+function edit (file, callback) {
+    process.stdin.setRawMode(true)
+    var p = spawn(globalConfig.editor, [file], {
+        customFds: [ 0, 1, 2 ]
+    })
+    p.on('exit', function () {
+        process.stdin.setRawMode(false)
+        callback && callback()
+    })
+}
+
+// File writing
+
+function initGlobalConfig (res) {
+    globalConfig.dir = res
+    // write default values for global config
+    globalConfig.env = 'development'
+    globalConfig.defaultScript = 'app.js'
+    globalConfig.editor = process.env.VISUAL || process.env.EDITOR || 'vi'
+
+    if (!fs.existsSync(globalConfigDirPath)) {
+        fs.mkdirSync(globalConfigDirPath)
+        fs.mkdirSync(globalConfigDirPath + '/app-configs')
+    }
+
+    fs.writeFileSync(globalConfigPath, JSON.stringify(globalConfig, null, 4))
+    log('write global config file: ' + globalConfigPath.yellow)
+}
+
+function makeDirs () {
+    var apps = globalConfig.dir + '/apps',
+        repos = globalConfig.dir + '/repos'
+        logs = globalConfig.dir + '/logs'
+    if (!fs.existsSync(apps)) fs.mkdirSync(apps)
+    if (!fs.existsSync(repos)) fs.mkdirSync(repos)
+    if (!fs.existsSync(logs)) fs.mkdirSync(logs)
+}
+
+function createHook (appname, repo, work) {
+    var hook = repo + '/hooks/post-receive'
+    var data = fs.readFileSync(__dirname + '/../hooks/post-receive', 'utf-8')
+        .replace(/\{\{pod_dir\}\}/g, globalConfig.dir)
+        .replace(/\{\{app\}\}/g, appname)
+    fs.writeFile(hook, data, function (err) {
+        if (err) {
+            warn(err)
+        } else {
+            fs.chmodSync(hook, '0777')
+        }
+    })
+}
+
+// File searching / reading
+
+function findApps () {
+    return fs.readdirSync(globalConfigDirPath + '/app-configs')
 }
 
 function getAppMainScript (workPath) {
@@ -459,6 +482,10 @@ function sniffPort (script) {
     }
 }
 
+function isDir (path) {
+    return fs.statSync(path).isDirectory()
+}
+
 function isRunning(list, script) {
     if (!list || !list.length) return false
     for (var i = 0, j = list.length; i < j; i++) {
@@ -468,19 +495,7 @@ function isRunning(list, script) {
     }
 }
 
-function isDir (path) {
-    return fs.statSync(path).isDirectory()
-}
-
-function prompt (msg, callback) {
-    console.log(msg)
-    process.stdin.resume()
-    process.stdin.setEncoding('utf8')
-    process.stdin.on('data', function (input) {
-        process.stdin.pause()
-        callback(input.replace(/\n/g, ''))
-    })
-}
+// output formatting
 
 function log (msg) {
     console.log('[pod] '.green + msg)
@@ -507,15 +522,6 @@ function getLongestName (apps) {
     return longest
 }
 
-function edit (file, callback) {
-    process.stdin.setRawMode(true)
-    var p = spawn(globalConfig.editor, [file], {
-        customFds: [ 0, 1, 2 ]
-    })
-    p.on('exit', function () {
-        process.stdin.setRawMode(false)
-        callback && callback()
-    })
-}
+// boot up
 
 init()
