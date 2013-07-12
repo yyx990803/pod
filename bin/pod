@@ -178,9 +178,8 @@ var pod = {
                 var longest = getLongestName(apps)
                 apps.forEach(function (appname) {
                     var app = getAppInfo(appname),
-                        port = ' : ' + (app.config.port || sniffPort(app.script) || 'unknown port'),
                         status = isRunning(list, app.script) ? 'ON'.green : 'OFF'.red
-                    console.log('⚑ ' + appname.yellow + spaces(longest - appname.length) + ' - ' + status + port)
+                    console.log('⚑ ' + appname.yellow + spaces(longest - appname.length) + ' - ' + status + ' : ' + app.port)
                 })
             }
         })
@@ -193,7 +192,7 @@ var pod = {
         var app = getAppInfo(appname)
 
         if (!fs.existsSync(app.script)) {
-            warn('cannot locate main script for ' + appname.yellow)
+            warn('cannot locate main script for ' + appname.yellow + '\n' +('(' + app.script + ')').grey)
             return
         }
 
@@ -226,8 +225,7 @@ var pod = {
                     outFile: app.logPath + '/stdout.log',
                     append: true
                 })
-                var port = app.config.port || sniffPort(app.script)
-                log(appname.yellow + ' running' + (port ? (' on port ' + port) : ''))
+                log(appname.yellow + ' running on port ' + app.port)
             }
         }
     },
@@ -340,7 +338,7 @@ function initConfig () {
             globalConfig.dir = res
             // default values
             globalConfig.env = 'development'
-            globalConfig.script = 'app.js'
+            globalConfig.defaultScript = 'app.js'
             globalConfig.editor = process.env.VISUAL || process.env.EDITOR || 'vi'
 
             if (!fs.existsSync(configPath)) {
@@ -431,9 +429,15 @@ function getAppInfo (app, creating) {
             warn('app ' + app.yellow + ' doesn\'t seem to exist.')
             process.exit(-1)
         }
-        info.script = info.workPath + '/' + (argv.script || info.config.script || globalConfig.script)
+        info.script = info.workPath + '/' + (getAppMainScript(info.workPath) || globalConfig.defaultScript)
+        info.port = info.config.port || sniffPort(info.script) || 'unknown port'
     }
     return info
+}
+
+function getAppMainScript (workPath) {
+    var pkg = readJSON(workPath + '/package.json')
+    if (pkg) return pkg.main
 }
 
 function readJSON (file) {
@@ -449,9 +453,9 @@ function sniffPort (script) {
         // sniff port
         var content = fs.readFileSync(script, 'utf-8'),
             port = content.match(/\.listen\(.*(\d\d\d\d\d?).*\)/)[1]
-        return port ? port : ''
+        return port ? port : null
     } else {
-        return ''
+        return null
     }
 }
 
