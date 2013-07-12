@@ -4,10 +4,12 @@
 cd {{pod_dir}}/apps/{{app}}
 env -i git pull
 
-# install dependencies in case changed
-[ -f package.json ] && npm install
-[ -f component.json ] && component install
-[ -f Gruntfile.js ] && grunt
+# if has pod.sh, execute that; otherwise default
+if [ -f .pod ]; then
+	bash .pod
+else
+	npm install --development
+fi
 
 # pod restart will not use latest env variables in config
 pod stop {{app}}
