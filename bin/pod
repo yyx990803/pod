@@ -56,8 +56,10 @@ var pod = {
 
         // create config file
         var appConf = {
-            env: argv.env ? argv.env : '',
-            port: argv.port ? argv.port : ''
+            env: '',
+            port: '',
+            maxRespawn: '',
+            options: []
         }
         fs.writeFile(app.configPath, JSON.stringify(appConf, null, 4), function(err) {
             if (err) console.error(err)
@@ -214,17 +216,20 @@ var pod = {
                 console.log(appname + ' already running.')
             } else {
                 // apply configs
-                if (app.config.port) process.env.PORT = argv.port || app.config.port
+                if (argv.port || app.config.port) process.env.PORT = argv.port || app.config.port
                 process.env.NODE_ENV = argv.env || app.config.env || globalConfig.env
 
-                // start daemon
-                forever.startDaemon(app.script, {
-                    max: 3,
+                var daemonOptions = {
+                    max: app.config.maxRespawn || 10,
+                    options: app.config.options || [],
                     logFile: app.logPath + '/forever.log',
                     errFile: app.logPath + '/stderr.log',
                     outFile: app.logPath + '/stdout.log',
-                    append: true
-                })
+                    append: true,
+                }
+
+                // start daemon
+                forever.startDaemon(app.script, daemonOptions)
                 log(appname.yellow + ' running on port ' + app.port)
             }
         }

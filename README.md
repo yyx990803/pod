@@ -91,3 +91,14 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
     config [app]            Edit global or app configs
 
 ```
+
+## Config
+
+Config files are json files located in `~/.podrc`. Global options are inside `global.json`, and each app's individual config is in `app-configs/`.
+
+App specific config options:
+
+- env        : will be passed in as `process.env.NODE_ENV`
+- port       : will be passed in as `process.env.PORT`
+- maxRespawn : max times forever will attempt to restart process
+- options    : an array of command line arguments to be passed to the app
