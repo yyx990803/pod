@@ -450,7 +450,7 @@ function sniffPort (script) {
     if (fs.existsSync(script)) {
         // sniff port
         var content = fs.readFileSync(script, 'utf-8'),
-            port = content.match(/\.listen\(([0-9]+)\)/)[1]
+            port = content.match(/\.listen\(.*(\d\d\d\d\d?).*\)/)[1]
         return port ? port : ''
     } else {
         return ''
