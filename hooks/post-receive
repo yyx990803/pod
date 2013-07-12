@@ -4,9 +4,9 @@
 cd {{pod_dir}}/apps/{{app}}
 env -i git pull
 
-# if has pod.sh, execute that; otherwise default
-if [ -f .pod ]; then
-	bash .pod
+# if has .podhook, execute that; otherwise default
+if [ -f .podhook ]; then
+	bash .podhook
 else
 	npm install --development
 fi
