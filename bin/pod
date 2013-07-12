@@ -22,8 +22,9 @@ var forever,
         'restartall'
     ]
 
-var config = {},
-    configPath = process.env.HOME + '/.podconfig'
+var globalConfig = {},
+    globalConfigDirPath = process.env.HOME + '/.podconfig',
+    globalConfigPath = globalConfigDirPath + '/global.json'
 
 var pod = {
 
@@ -38,7 +39,7 @@ var pod = {
             edit(
                 appname
                 ? getAppInfo(appname).configPath
-                : (configPath + '/global.json')
+                : globalConfigPath
             )
         }
     },
@@ -56,7 +57,6 @@ var pod = {
         // create config file
         var appConf = {
             env: argv.env ? argv.env : '',
-            script: argv.script ? argv.script : '',
             port: argv.port ? argv.port : ''
         }
         fs.writeFile(app.configPath, JSON.stringify(appConf, null, 4), function(err) {
@@ -216,7 +216,7 @@ var pod = {
             } else {
                 // apply configs
                 if (app.config.port) process.env.PORT = argv.port || app.config.port
-                process.env.NODE_ENV = argv.env || app.config.env || config.env
+                process.env.NODE_ENV = argv.env || app.config.env || globalConfig.env
 
                 // start daemon
                 forever.startDaemon(app.script, {
@@ -286,7 +286,7 @@ var pod = {
         var runner = forever.stopAll()
         runner.on('stopAll', function (processes) {
             if (processes && processes.length) {
-                var appnameRE = new RegExp(config.dir + '/apps/(.+)/' + config.script)
+                var appnameRE = new RegExp(globalConfig.dir + '/apps/(.+)/.+\.js\b')
                 log('stopped:')
                 processes.forEach(function (p) {
                     var match = p.file.match(appnameRE)
@@ -305,7 +305,7 @@ var pod = {
         var runner = forever.restartAll()
         runner.on('restartAll', function (processes) {
             if (processes && processes.length) {
-                var appnameRE = new RegExp(config.dir + '/apps/(.+)/' + config.script)
+                var appnameRE = new RegExp(globalConfig.dir + '/apps/(.+)/.+\.js\b')
                 log('restarted:')
                 processes.forEach(function (p) {
                     var match = p.file.match(appnameRE)
@@ -324,9 +324,8 @@ var pod = {
 
 // INIT
 function init () {
-    var mainConfig = configPath + '/global.json'
-    if (fs.existsSync(mainConfig)) {
-        config = JSON.parse(fs.readFileSync(mainConfig, 'utf-8'))
+    if (fs.existsSync(globalConfigPath)) {
+        globalConfig = JSON.parse(fs.readFileSync(globalConfigPath, 'utf-8'))
         parseCommand()
     } else {
         console.log('No global config file found.')
@@ -338,11 +337,11 @@ function initConfig () {
     prompt('Where do you want Pod to keep all its stuff?', function (res) {
         res = path.resolve(cwd, res)
         if (fs.existsSync(res) && isDir(res)) {
-            config.dir = res
+            globalConfig.dir = res
             // default values
-            config.env = 'development'
-            config.script = 'app.js'
-            config.editor = process.env.VISUAL || process.env.EDITOR || 'vi'
+            globalConfig.env = 'development'
+            globalConfig.script = 'app.js'
+            globalConfig.editor = process.env.VISUAL || process.env.EDITOR || 'vi'
 
             if (!fs.existsSync(configPath)) {
                 fs.mkdirSync(configPath)
@@ -350,10 +349,10 @@ function initConfig () {
             }
 
             setConfig(null, config, function () {
-                log('write global config file: ' + (configPath + '/global.json').yellow)
-                var apps = config.dir + '/apps',
-                    repos = config.dir + '/repos'
-                    logs = config.dir + '/logs'
+                log('write global config file: ' + globalConfigPath.yellow)
+                var apps = globalConfig.dir + '/apps',
+                    repos = globalConfig.dir + '/repos'
+                    logs = globalConfig.dir + '/logs'
                 if (!fs.existsSync(apps)) fs.mkdirSync(apps)
                 if (!fs.existsSync(repos)) fs.mkdirSync(repos)
                 if (!fs.existsSync(logs)) fs.mkdirSync(logs)
@@ -386,7 +385,7 @@ function parseCommand () {
 function createHook (appname, repo, work) {
     var hook = repo + '/hooks/post-receive'
     var data = fs.readFileSync(__dirname + '/../hooks/post-receive', 'utf-8')
-        .replace(/\{\{pod_dir\}\}/g, config.dir)
+        .replace(/\{\{pod_dir\}\}/g, globalConfig.dir)
         .replace(/\{\{app\}\}/g, appname)
 
     fs.writeFile(hook, data, function (err) {
@@ -400,9 +399,8 @@ function createHook (appname, repo, work) {
 
 function setConfig (app, options, callback) {
     
-    var file = app ?  (configPath + '/app-configs/' + app) : (configPath + '/global.json'),
-        current = app ? JSON.parse(fs.readFileSync(file, 'utf-8')) : config
-
+    var file = app ?  (configPath + '/app-configs/' + app) : globalConfigPath,
+        current = app ? JSON.parse(fs.readFileSync(file, 'utf-8')) : globalConfig 
     for (var op in options) {
         if (op in current) current[op] = options[op]
     }
@@ -417,15 +415,15 @@ function setConfig (app, options, callback) {
 }
 
 function findApps () {
-    return fs.readdirSync(configPath + '/app-configs')
+    return fs.readdirSync(globalConfigDirPath + '/app-configs')
 }
 
 function getAppInfo (app, creating) {
     var info = {
-        configPath  : configPath + '/app-configs/' + app,
-        repoPath    : config.dir + '/repos/' + app + '.git',
-        workPath    : config.dir + '/apps/' + app,
-        logPath     : config.dir + '/logs/' + app
+        configPath  : globalConfigDirPath + '/app-configs/' + app,
+        repoPath    : globalConfig.dir + '/repos/' + app + '.git',
+        workPath    : globalConfig.dir + '/apps/' + app,
+        logPath     : globalConfig.dir + '/logs/' + app
     }
     if (!creating) {
         info.config = readJSON(info.configPath)
@@ -433,7 +431,7 @@ function getAppInfo (app, creating) {
             warn('app ' + app.yellow + ' doesn\'t seem to exist.')
             process.exit(-1)
         }
-        info.script = info.workPath + '/' + (argv.script || info.config.script || config.script)
+        info.script = info.workPath + '/' + (argv.script || info.config.script || globalConfig.script)
     }
     return info
 }
@@ -507,7 +505,7 @@ function getLongestName (apps) {
 
 function edit (file, callback) {
     process.stdin.setRawMode(true)
-    var p = spawn(config.editor, [file], {
+    var p = spawn(globalConfig.editor, [file], {
         customFds: [ 0, 1, 2 ]
     })
     p.on('exit', function () {
