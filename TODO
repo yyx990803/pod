@@ -1,1 +1,3 @@
-provide an API so I can get info from it in status to make a web interface.
+separation of API and CLI
+tests
+use commander for CLI
