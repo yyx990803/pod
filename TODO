@@ -1,3 +1,4 @@
 separation of API and CLI
 tests
 use commander for CLI
+config can be a single file!
