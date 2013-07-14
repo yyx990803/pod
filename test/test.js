@@ -11,7 +11,8 @@ var testConfig = {
     apps: {}
 }
 
-var testPort   = process.env.PORT || 18080
+var testPort   = process.env.PORT || 18080,
+	stubScript = fs.readFileSync(__dirname + '/fixtures/app.js', 'utf-8')
 
 var	pod        = require('../lib/pod').initTest(testConfig),
 	appsDir    = testConfig.dir + '/apps',
@@ -19,29 +20,33 @@ var	pod        = require('../lib/pod').initTest(testConfig),
 	logsDir    = testConfig.dir + '/logs',
 	confDir    = testConfig.dir + '/.podrc'
 
-// prepare temp dir
-if (fs.existsSync(testConfig.dir)) {
-	deleteDir(testConfig.dir)
-}
-
-fs.mkdirSync(testConfig.dir)
-fs.mkdirSync(appsDir)
-fs.mkdirSync(reposDir)
-fs.mkdirSync(logsDir)
-fs.mkdirSync(confDir)
-
 describe('API', function () {
 
-	var monitor
+	before(function (done) {
+	    exec('rm -rf ' + testConfig.dir, function (err) {
+	        if (err) throw err
+	        fs.mkdirSync(testConfig.dir)
+			fs.mkdirSync(appsDir)
+			fs.mkdirSync(reposDir)
+			fs.mkdirSync(logsDir)
+			fs.mkdirSync(confDir)
+			done()
+		})
+	})
 
 	describe('.createApp', function () {
 
 	  	it('should complete without error and invoke callback', function (done) {
-        	pod.createApp('test', function (err, msg, appInfo) {
-        		assert.ok(!err)
-        		assert.ok(appInfo)
-        		done()
-        	})
+        	pod.createApp(
+        		'test',
+        		{ port: testPort },
+        		function (err, msg, appInfo) {
+        			assert.ok(!err, 'callback should receive no error')
+        			assert.ok(appInfo, 'callback should receive appInfo object')
+        			assert.equal(appInfo.config.port, testPort, 'options should be written to app config')
+        			done()
+        		}
+        	)
     	})
 
     	it ('should update the config with app\'s entry', function () {
@@ -67,17 +72,16 @@ describe('API', function () {
 	describe('.startApp', function () {
 
 		before(function () {
-			// create stub for app.js
-		    var stub = fs.readFileSync(__dirname + '/app.stub.js', 'utf-8')
-		    stub = stub.replace('{{port}}', testPort)
-			fs.writeFileSync(appsDir + '/test/app.js', stub)
+			var script = stubScript.replace('{{port}}', testPort)
+			fs.writeFileSync(appsDir + '/test/app.js', script)
 		})
 
 		it('should complete without error and invoke callback', function (done) {
-        	pod.startApp('test', function (err, msg, monit) {
+        	pod.startApp('test', function (err, msg, monitor) {
         		assert.ok(!err, 'callback should receive no error')
-        		assert.ok(monit, 'callback should receive a monitor process')
-        		monitor = monit
+        		assert.ok(monitor, 'callback should receive a monitor process')
+        		// forever has an exit listener if it dies in the same process
+        		monitor.removeAllListeners('exit')
         		setTimeout(done, 500) // wait for monitor to start script
         	})
     	})
@@ -114,25 +118,42 @@ describe('API', function () {
 		    })
 		})
 
+		it('should no longer be using port ' + testPort, function (done) {
+			var req = http.get('http://localhost:' + testPort)
+			req.on('error', function (err) {
+			    assert.equal(err.code, 'ECONNREFUSED')
+			    done()
+			})
+		})
+
+	})
+
+	describe('.startAllApps', function () {
+
+		before(function (done) {
+		    pod.createApp('test2', function () {
+		    	var script = stubScript.replace('{{port}}', testPort + 1)
+				fs.writeFileSync(appsDir + '/test2/app.js', script)
+				done()
+		    })
+		})
+
+		it('should start all apps', function (done) {
+		    pod.startAllApps(function (err, msgs) {
+		    	assert.ok(!err, 'should get no error')
+		        assert.equal(msgs.length, 2, 'should get two message')
+		        done()
+		    })
+		})
+
 	})
 
 	after(function () {
-		// kill monitor in case not stopped in test
-		monitor && monitor.kill()
+		// kill test processes in case not stopped in test
+		// http://stackoverflow.com/questions/3510673/find-and-kill-a-process-in-one-line-using-bash-and-regex
+		exec("kill $(ps ax | grep '[t]emp/apps/test/app.js' | awk '{print $1}')", function (err) {
+		    if (err) throw err
+		})
 	})
 
 })
-
-function deleteDir (path) {
-  	if( fs.existsSync(path) ) {
-    	fs.readdirSync(path).forEach(function(file,index){
-      		var curPath = path + "/" + file
-      		if(fs.statSync(curPath).isDirectory()) { // recurse
-        		deleteDir(curPath)
-      		} else { // delete file
-        		fs.unlinkSync(curPath)
-      		}
-    	})
-    	fs.rmdirSync(path)
-  	}
-}
