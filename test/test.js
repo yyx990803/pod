@@ -11,6 +11,8 @@ var testConfig = {
     apps: {}
 }
 
+var testPort   = process.env.PORT || 18080
+
 var	pod        = require('../lib/pod').initTest(testConfig),
 	appsDir    = testConfig.dir + '/apps',
 	reposDir   = testConfig.dir + '/repos',
@@ -67,6 +69,7 @@ describe('API', function () {
 		before(function () {
 			// create stub for app.js
 		    var stub = fs.readFileSync(__dirname + '/app.stub.js', 'utf-8')
+		    stub = stub.replace('{{port}}', testPort)
 			fs.writeFileSync(appsDir + '/test/app.js', stub)
 		})
 
@@ -88,8 +91,8 @@ describe('API', function () {
     	    })
     	})
 
-    	it('should accept http request on port 8080', function (done) {
-	        http.get('http://localhost:8080', function (res) {
+    	it('should accept http request on port ' + testPort, function (done) {
+	        http.get('http://localhost:' + testPort, function (res) {
     	        assert.equal(res.statusCode, 200)
     	        res.setEncoding('utf-8')
     	        res.on('data', function (data) {
@@ -98,6 +101,18 @@ describe('API', function () {
     	        })
     	    })
     	})
+
+	})
+
+	describe('.stopApp', function () {
+	    
+		it('should stop the app', function (done) {
+		    pod.stopApp('test', function (err, msg) {
+		    	assert.ok(!err)
+		    	assert.ok(/stopped/.test(msg))
+		        done()
+		    })
+		})
 
 	})
 
