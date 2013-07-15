@@ -140,6 +140,7 @@ describe('API', function () {
 		it('should start all apps', function (done) {
 		    pod.startAllApps(function (err, msgs) {
 		    	assert.ok(!err, 'should get no error')
+		    	assert.ok(Array.isArray(msgs), 'should get an array of messages')
 		        assert.equal(msgs.length, 2, 'should get two message')
 		        setTimeout(done, 500)
 		    })
@@ -173,6 +174,7 @@ describe('API', function () {
 		it('should stop all apps', function (done) {
 		    pod.stopAllApps(function (err, msgs) {
 		    	assert.ok(!err, 'should get no error')
+		    	assert.ok(Array.isArray(msgs), 'should get an array of messages')
 		        assert.equal(msgs.length, 2, 'should get two message')
 		        done()
 		    })
