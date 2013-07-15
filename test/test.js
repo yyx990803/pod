@@ -34,15 +34,16 @@ describe('API', function () {
 		})
 	})
 
-	describe('.createApp', function () {
+	describe('.createApp(appname, [options,] callback)', function () {
 
 	  	it('should complete without error and invoke callback', function (done) {
         	pod.createApp(
         		'test',
         		{ port: testPort },
-        		function (err, msg, appInfo) {
-        			assert.ok(!err, 'callback should receive no error')
+        		function (err, msgs, appInfo) {
+        			if (err) return done(err)
         			assert.ok(appInfo, 'callback should receive appInfo object')
+        			assert.equal(msgs.length, 5, 'should return 5 messages')
         			assert.equal(appInfo.config.port, testPort, 'options should be written to app config')
         			done()
         		}
@@ -69,7 +70,7 @@ describe('API', function () {
 
 	})
 
-	describe('.startApp', function () {
+	describe('.startApp(appname, callback)', function () {
 
 		before(function () {
 			var script = stubScript.replace('{{port}}', testPort)
@@ -78,17 +79,15 @@ describe('API', function () {
 
 		it('should complete without error and invoke callback', function (done) {
         	pod.startApp('test', function (err, msg, monitor) {
-        		assert.ok(!err, 'callback should receive no error')
+        		if (err) return done(err)
         		assert.ok(monitor, 'callback should receive a monitor process')
-        		// forever has an exit listener if it dies in the same process
-        		monitor.removeAllListeners('exit')
         		setTimeout(done, 500) // wait for monitor to start script
         	})
     	})
 
     	it('should abort if app is already running', function (done) {
 		    pod.startApp('test', function (err, msg, monit) {
-    	        assert.ok(!err, 'callback should receive no error')
+		    	if (err) return done(err)
     	        assert.ok(/already\srunning/.test(msg), 'callback should receive correct message')
     	        assert.ok(!monit, 'callback should receive no monitor process')
     	        done()
@@ -108,11 +107,11 @@ describe('API', function () {
 
 	})
 
-	describe('.stopApp', function () {
+	describe('.stopApp(appname, callback)', function () {
 	    
 		it('should stop the app', function (done) {
 		    pod.stopApp('test', function (err, msg) {
-		    	assert.ok(!err)
+		    	if (err) return done(err)
 		    	assert.ok(/stopped/.test(msg))
 		        done()
 		    })
@@ -128,7 +127,7 @@ describe('API', function () {
 
 	})
 
-	describe('.startAllApps', function () {
+	describe('.startAllApps()', function () {
 
 		before(function (done) {
 		    pod.createApp('test2', function () {
@@ -142,8 +141,55 @@ describe('API', function () {
 		    pod.startAllApps(function (err, msgs) {
 		    	assert.ok(!err, 'should get no error')
 		        assert.equal(msgs.length, 2, 'should get two message')
+		        setTimeout(done, 500)
+		    })
+		})
+
+		it('should accept http request on both ports', function (done) {
+			// first port
+	        http.get('http://localhost:' + testPort, function (res) {
+    	        assert.equal(res.statusCode, 200)
+    	        res.setEncoding('utf-8')
+    	        res.on('data', function (data) {
+    	            assert.equal(data, 'ok!')
+    	            // second port
+    	            http.get('http://localhost:' + (testPort + 1), function (res) {
+		    	        assert.equal(res.statusCode, 200)
+		    	        res.setEncoding('utf-8')
+		    	        res.on('data', function (data) {
+		    	            assert.equal(data, 'ok!')
+		    	            done()
+		    	        })
+		    	    })
+
+    	        })
+    	    })
+    	})
+
+	})
+
+	describe('.stopAllApps()', function () {
+	    
+		it('should stop all apps', function (done) {
+		    pod.stopAllApps(function (err, msgs) {
+		    	assert.ok(!err, 'should get no error')
+		        assert.equal(msgs.length, 2, 'should get two message')
 		        done()
 		    })
+		})
+
+		it('should no longer be using the two ports', function (done) {
+			// port1
+			var req = http.get('http://localhost:' + testPort)
+			req.on('error', function (err) {
+			    assert.equal(err.code, 'ECONNREFUSED')
+			    // port 2
+			    var req2 = http.get('http://localhost:' + (testPort + 1))
+			    req2.on('error', function (err) {
+			        assert.equal(err.code, 'ECONNREFUSED')
+			        done()
+			    })
+			})
 		})
 
 	})
@@ -151,7 +197,7 @@ describe('API', function () {
 	after(function () {
 		// kill test processes in case not stopped in test
 		// http://stackoverflow.com/questions/3510673/find-and-kill-a-process-in-one-line-using-bash-and-regex
-		exec("kill $(ps ax | grep '[t]emp/apps/test/app.js' | awk '{print $1}')", function (err) {
+		exec("kill $(ps ax | grep '[t]emp/apps/test.*/app\.js' | awk '{print $1}')", function (err) {
 		    if (err) throw err
 		})
 	})
