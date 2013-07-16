@@ -24,7 +24,7 @@ describe('API', function () {
 
 	before(function (done) {
 	    exec('rm -rf ' + testConfig.dir, function (err) {
-	        if (err) throw err
+	        if (err) return done(err)
 	        fs.mkdirSync(testConfig.dir)
 			fs.mkdirSync(appsDir)
 			fs.mkdirSync(reposDir)
@@ -99,7 +99,7 @@ describe('API', function () {
     	        assert.equal(res.statusCode, 200)
     	        res.setEncoding('utf-8')
     	        res.on('data', function (data) {
-    	            assert.equal(data, 'ok!')
+    	            assert.ok(/ok!/.test(data))
     	            done()
     	        })
     	    })
@@ -139,7 +139,7 @@ describe('API', function () {
 
 		it('should start all apps', function (done) {
 		    pod.startAllApps(function (err, msgs) {
-		    	assert.ok(!err, 'should get no error')
+		    	if (err) return done(err)
 		    	assert.ok(Array.isArray(msgs), 'should get an array of messages')
 		        assert.equal(msgs.length, 2, 'should get two message')
 		        setTimeout(done, 500)
@@ -152,13 +152,13 @@ describe('API', function () {
     	        assert.equal(res.statusCode, 200)
     	        res.setEncoding('utf-8')
     	        res.on('data', function (data) {
-    	            assert.equal(data, 'ok!')
+    	            assert.ok(/ok!/.test(data))
     	            // second port
     	            http.get('http://localhost:' + (testPort + 1), function (res) {
 		    	        assert.equal(res.statusCode, 200)
 		    	        res.setEncoding('utf-8')
 		    	        res.on('data', function (data) {
-		    	            assert.equal(data, 'ok!')
+		    	            assert.ok(/ok!/.test(data))
 		    	            done()
 		    	        })
 		    	    })
@@ -173,7 +173,7 @@ describe('API', function () {
 	    
 		it('should stop all apps', function (done) {
 		    pod.stopAllApps(function (err, msgs) {
-		    	assert.ok(!err, 'should get no error')
+		    	if (err) return done(err)
 		    	assert.ok(Array.isArray(msgs), 'should get an array of messages')
 		        assert.equal(msgs.length, 2, 'should get two message')
 		        done()
@@ -209,7 +209,7 @@ describe('API', function () {
 	    
 		it('should provide a list of apps\' info', function (done) {
 		    pod.listApps(function (err, apps) {
-		        assert.ok(!err, 'should get no error')
+		        if (err) return done(err)
 		        assert.equal(apps.length, 2, 'should get two apps')
 		        appsResult = apps
 		        done()
@@ -223,6 +223,77 @@ describe('API', function () {
 
 	})
 
+	describe('.restartApp()', function () {
+
+		var beforeRestartStamp
+	    
+		it('should restart a running app without error', function (done) {
+			beforeRestartStamp = Date.now()
+		    pod.restartApp('test', function (err, msg) {
+		        if (err) return done(err)
+		        setTimeout(done, 500)
+		    })
+		})
+
+		it('should have indeed restarted the process', function (done) {
+		    http.get('http://localhost:' + testPort, function (res) {
+    	        assert.equal(res.statusCode, 200)
+    	        res.setEncoding('utf-8')
+    	        res.on('data', function (data) {
+    	            var restartStamp = data.match(/\((\d+)\)/)[1]
+    	            restartStamp = parseInt(restartStamp, 10)
+    	            assert.ok(restartStamp > beforeRestartStamp)
+    	            done()
+    	        })
+    	    })
+		})
+
+		it('should get an error trying to restart a non-running app', function (done) {
+		    pod.restartApp('test2', function (err) {
+		        assert.ok(/is not running/.test(err.toString()))
+		        done()
+		    })
+		})
+
+	})
+
+	describe('.restartAllApps()', function () {
+	    
+		var beforeRestartStamp
+
+		it('should restart only apps that are running', function (done) {
+		    beforeRestartStamp = Date.now()
+		    pod.restartAllApps(function (err, msgs) {
+		        if (err) return done(err)
+		        assert.ok(Array.isArray(msgs))
+		        assert.equal(msgs.length, 1)
+		        setTimeout(done, 500)
+		    })
+		})
+
+		it('should have indeed restarted the running process', function (done) {
+		    http.get('http://localhost:' + testPort, function (res) {
+    	        assert.equal(res.statusCode, 200)
+    	        res.setEncoding('utf-8')
+    	        res.on('data', function (data) {
+    	            var restartStamp = data.match(/\((\d+)\)/)[1]
+    	            restartStamp = parseInt(restartStamp, 10)
+    	            assert.ok(restartStamp > beforeRestartStamp)
+    	            done()
+    	        })
+    	    })
+		})
+
+		it('should not start the non-running app', function (done) {
+		    var req = http.get('http://localhost:' + (testPort + 1))
+			req.on('error', function (err) {
+			    assert.equal(err.code, 'ECONNREFUSED')
+			    done()
+			})
+		})
+
+	})
+
 	after(killTestProcs)
 
 })
@@ -230,5 +301,7 @@ describe('API', function () {
 function killTestProcs (done) {
 	// kill test processes in case not stopped in test
 	// http://stackoverflow.com/questions/3510673/find-and-kill-a-process-in-one-line-using-bash-and-regex
-	exec("kill $(ps ax | grep '[t]emp/apps/test.*/app\.js' | awk '{print $1}')", done)
+	exec("kill $(ps ax | grep '[t]emp/apps/test.*/app\.js' | awk '{print $1}')", function () {
+	    done()
+	})
 }

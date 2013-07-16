@@ -85,7 +85,7 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
     list [-p]               List apps and status. [-p] = List processes
     start <app>             Start an app with forever
     stop <app>              Stop an app
-    restart <app>           Restart an app, start if not already running
+    restart <app>           Restart an already running app
     startall                Start all apps not already running
     stopall                 Stop all apps
     restartall              Restart all running apps

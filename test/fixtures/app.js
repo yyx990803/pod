@@ -1,3 +1,3 @@
 require('http').createServer(function (req, res) {
-    res.end('ok!', 'utf-8')
+    res.end('ok! process started on: (' + Date.now() + ')' , 'utf-8')
 }).listen({{port}})
