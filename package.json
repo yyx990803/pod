@@ -31,7 +31,7 @@
   "engines": {
     "node": ">= 0.8.x"
   },
-  "main": "lib/pod.js",
+  "main": "lib/api.js",
   "description": "Super simple Node.js deployment tool",
   "readme": "Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server.",
   "readmeFilename": "README.md",

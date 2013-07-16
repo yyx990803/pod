@@ -15,7 +15,7 @@ var testConfig = {
 var testPort   = process.env.PORT || 18080,
 	stubScript = fs.readFileSync(__dirname + '/fixtures/app.js', 'utf-8')
 
-var	pod        = require('../lib/pod').initTest(testConfig),
+var	pod        = require('../lib/core').initTest(testConfig),
 	appsDir    = testConfig.dir + '/apps',
 	reposDir   = testConfig.dir + '/repos',
 	logsDir    = testConfig.dir + '/logs'

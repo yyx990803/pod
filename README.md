@@ -80,17 +80,18 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
 
     create <app>            Create a new app
     rm <app>                Delete an app
-    cleanlogs <app>         Clean up logs for an app
-    edit <app>              Edit the app's post-receive hook
-    list [-p]               List apps and status. [-p] = List processes
     start <app>             Start an app with forever
     stop <app>              Stop an app
-    restart <app>           Restart an already running app
+    restart <app>           Restart an app, start if not already running
+    list                    List apps and status
+    procs                   List all app and monitor processes
     startall                Start all apps not already running
     stopall                 Stop all apps
     restartall              Restart all running apps
+    cleanlogs <app>         Clean up logs for an app
+    edit <app>              Edit the app's post-receive hook
+    config                  Edit config file
     help                    You are reading it right now
-    config [app]            Edit global or app configs
 
 ```
 
