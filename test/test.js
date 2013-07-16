@@ -33,7 +33,7 @@ describe('API', function () {
 		})
 	})
 
-	describe('.createApp(appname, [options,] callback)', function () {
+	describe('.createApp( appname, [options,] callback )', function () {
 
 	  	it('should complete without error and invoke callback', function (done) {
         	pod.createApp(
@@ -67,9 +67,18 @@ describe('API', function () {
     	    })
     	})
 
+    	it('should also work without the optional options', function (done) {
+    	    pod.createApp('test2', function (err, msgs, appInfo) {
+		    	if (err) return done(err)
+        		assert.ok(appInfo, 'callback should receive appInfo object')
+        		assert.equal(msgs.length, 5, 'should return 5 messages')
+				done()
+		    })
+    	})
+
 	})
 
-	describe('.startApp(appname, callback)', function () {
+	describe('.startApp( appname, callback )', function () {
 
 		before(function () {
 			var script = stubScript.replace('{{port}}', testPort)
@@ -106,7 +115,7 @@ describe('API', function () {
 
 	})
 
-	describe('.stopApp(appname, callback)', function () {
+	describe('.stopApp( appname, callback )', function () {
 	    
 		it('should stop the app', function (done) {
 		    pod.stopApp('test', function (err, msg) {
@@ -126,14 +135,11 @@ describe('API', function () {
 
 	})
 
-	describe('.startAllApps()', function () {
+	describe('.startAllApps( callback )', function () {
 
-		before(function (done) {
-		    pod.createApp('test2', function () {
-		    	var script = stubScript.replace('{{port}}', testPort + 1)
-				fs.writeFileSync(appsDir + '/test2/app.js', script)
-				done()
-		    })
+		before(function () {
+		    var script = stubScript.replace('{{port}}', testPort + 1)
+			fs.writeFileSync(appsDir + '/test2/app.js', script)
 		})
 
 		it('should start all apps', function (done) {
@@ -168,7 +174,7 @@ describe('API', function () {
 
 	})
 
-	describe('.stopAllApps()', function () {
+	describe('.stopAllApps( callback )', function () {
 	    
 		it('should stop all apps', function (done) {
 		    pod.stopAllApps(function (err, msgs) {
@@ -195,7 +201,7 @@ describe('API', function () {
 
 	})
 
-	describe('.listApps()', function () {
+	describe('.listApps( callback )', function () {
 
 		var appsResult
 
@@ -222,7 +228,7 @@ describe('API', function () {
 
 	})
 
-	describe('.restartApp()', function () {
+	describe('.restartApp( appname, callback )', function () {
 
 		var beforeRestartStamp
 	    
@@ -293,7 +299,7 @@ describe('API', function () {
 
 	})
 
-	describe('.removeApp()', function () {
+	describe('.removeApp( appname, callback )', function () {
 
 		var app
 
@@ -321,7 +327,7 @@ describe('API', function () {
 
 	})
 
-	describe('.cleanAppLog()', function () {
+	describe('.cleanAppLog( appname, callback )', function () {
 	    
 		it('should remove all log files for the app', function (done) {
 			var app = pod.getAppInfo('test2')
