@@ -294,6 +294,31 @@ describe('API', function () {
 
 	})
 
+	describe('.removeApp()', function () {
+
+		before(function (done) {
+		    pod.removeApp('test', function (err) {
+		        if (err) return done(err)
+		        done()
+		    })
+		})
+	    
+		it('should remove all the app files', function () {
+		    assert.ok(!fs.existsSync(appsDir + '/test'), 'working copy')
+		    assert.ok(!fs.existsSync(logsDir + '/test'), 'logs dir')
+		    assert.ok(!fs.existsSync(reposDir + '/test.git'), 'git repo')
+		})
+
+		it('should have stopped the deleted app\'s process', function (done) {
+		    var req = http.get('http://localhost:' + testPort)
+			req.on('error', function (err) {
+			    assert.equal(err.code, 'ECONNREFUSED')
+			    done()
+			})
+		})
+
+	})
+
 	after(killTestProcs)
 
 })
