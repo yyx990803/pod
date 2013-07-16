@@ -1,10 +1,11 @@
 var assert = require('assert'),
 	fs     = require('fs'),
+	path   = require('path'),
 	http   = require('http'),
 	exec   = require('child_process').exec
 
 var testConfig = {
-    dir: __dirname + '/../temp',
+    dir: path.resolve(__dirname, '../temp'),
     env: 'development',
     defaultScript: 'app.js',
     editor: 'vi',
@@ -17,8 +18,7 @@ var testPort   = process.env.PORT || 18080,
 var	pod        = require('../lib/pod').initTest(testConfig),
 	appsDir    = testConfig.dir + '/apps',
 	reposDir   = testConfig.dir + '/repos',
-	logsDir    = testConfig.dir + '/logs',
-	confDir    = testConfig.dir + '/.podrc'
+	logsDir    = testConfig.dir + '/logs'
 
 describe('API', function () {
 
@@ -29,7 +29,6 @@ describe('API', function () {
 			fs.mkdirSync(appsDir)
 			fs.mkdirSync(reposDir)
 			fs.mkdirSync(logsDir)
-			fs.mkdirSync(confDir)
 			killTestProcs(done)
 		})
 	})
