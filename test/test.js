@@ -30,7 +30,7 @@ describe('API', function () {
 			fs.mkdirSync(reposDir)
 			fs.mkdirSync(logsDir)
 			fs.mkdirSync(confDir)
-			done()
+			killTestProcs(done)
 		})
 	})
 
@@ -196,12 +196,39 @@ describe('API', function () {
 
 	})
 
-	after(function () {
-		// kill test processes in case not stopped in test
-		// http://stackoverflow.com/questions/3510673/find-and-kill-a-process-in-one-line-using-bash-and-regex
-		exec("kill $(ps ax | grep '[t]emp/apps/test.*/app\.js' | awk '{print $1}')", function (err) {
-		    if (err) throw err
+	describe('.listApps()', function () {
+
+		var appsResult
+
+		before(function (done) {
+		    pod.startApp('test', function (err) {
+		    	if (err) return done(err)
+		        setTimeout(done, 500)
+		    })
 		})
+	    
+		it('should provide a list of apps\' info', function (done) {
+		    pod.listApps(function (err, apps) {
+		        assert.ok(!err, 'should get no error')
+		        assert.equal(apps.length, 2, 'should get two apps')
+		        appsResult = apps
+		        done()
+		    })
+		})
+
+		it('should contain correct app running status', function () {
+		    assert.ok(appsResult[0].isRunning, 'test should be on')
+		    assert.ok(!appsResult[1].isRunning, 'test2 should be off')
+		})
+
 	})
 
+	after(killTestProcs)
+
 })
+
+function killTestProcs (done) {
+	// kill test processes in case not stopped in test
+	// http://stackoverflow.com/questions/3510673/find-and-kill-a-process-in-one-line-using-bash-and-regex
+	exec("kill $(ps ax | grep '[t]emp/apps/test.*/app\.js' | awk '{print $1}')", done)
+}
