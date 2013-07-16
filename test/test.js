@@ -222,8 +222,14 @@ describe('API', function () {
 		})
 
 		it('should contain correct app running status', function () {
-		    assert.ok(appsResult[0].isRunning, 'test should be on')
-		    assert.ok(!appsResult[1].isRunning, 'test2 should be off')
+			appsResult.forEach(function (app) {
+			    if (app.name === 'test') {
+			    	assert.ok(app.isRunning, 'test should be on')
+			    }
+			    if (app.name === 'test2') {
+			    	assert.ok(!appsResult[1].isRunning, 'test2 should be off')
+			    }
+			})
 		})
 
 	})
