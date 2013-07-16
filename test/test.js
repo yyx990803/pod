@@ -295,7 +295,10 @@ describe('API', function () {
 
 	describe('.removeApp()', function () {
 
+		var app
+
 		before(function (done) {
+			app = pod.getAppInfo('test')
 		    pod.removeApp('test', function (err) {
 		        if (err) return done(err)
 		        done()
@@ -303,9 +306,9 @@ describe('API', function () {
 		})
 	    
 		it('should remove all the app files', function () {
-		    assert.ok(!fs.existsSync(appsDir + '/test'), 'working copy')
-		    assert.ok(!fs.existsSync(logsDir + '/test'), 'logs dir')
-		    assert.ok(!fs.existsSync(reposDir + '/test.git'), 'git repo')
+		    assert.ok(!fs.existsSync(app.workPath), 'working copy')
+		    assert.ok(!fs.existsSync(app.logPath), 'logs dir')
+		    assert.ok(!fs.existsSync(app.repoPath), 'git repo')
 		})
 
 		it('should have stopped the deleted app\'s process', function (done) {
@@ -314,6 +317,21 @@ describe('API', function () {
 			    assert.equal(err.code, 'ECONNREFUSED')
 			    done()
 			})
+		})
+
+	})
+
+	describe('.cleanAppLog()', function () {
+	    
+		it('should remove all log files for the app', function (done) {
+			var app = pod.getAppInfo('test2')
+		    pod.cleanAppLog('test2', function (err) {
+		        if (err) return done(err)
+		        assert.ok(!fs.existsSync(app.logPath + '/forever.log'), 'forever')
+		    	assert.ok(!fs.existsSync(app.logPath + '/stdout.log'), 'stdout')
+		    	assert.ok(!fs.existsSync(app.logPath + '/stderr.log'), 'stderr')
+		    	done()
+		    })
 		})
 
 	})
