@@ -111,8 +111,8 @@ Example Config:
     "apps": {
         "example": {
             "nodeEnv": "production", // passed to the app as process.env.NODE_ENV
-            "port": 8080 // passed to the app as process.env.PORT
-            // any valid pm2 config here gets passed to pm2
+            "port": 8080, // passed to the app as process.env.PORT
+            "instances": 2 // any valid pm2 config here gets passed to pm2
         }
     }
 }
