@@ -1,0 +1,7 @@
+{
+    "root": "{{root}}",
+    "nodeEnv": "development",
+    "defaultScript": "app.js",
+    "editor": "vi",
+    "apps": {}
+}

@@ -4,38 +4,37 @@ var assert = require('assert'),
     http   = require('http'),
     exec   = require('child_process').exec
 
-var testConfig = {
-    root: path.resolve(__dirname, '../temp'),
-    nodeEnv: 'development',
-    defaultScript: 'app.js',
-    editor: 'vi',
-    apps: {}
-}
-
-var appsDir    = testConfig.root + '/apps',
-    reposDir   = testConfig.root + '/repos',
-    logsDir    = testConfig.root + '/logs'
+var root       = path.resolve(__dirname, '../temp'),
+    appsDir    = root + '/apps',
+    reposDir   = root + '/repos',
+    logsDir    = root + '/logs'
     testPort   = process.env.PORT || 18080,
     stubScript = fs.readFileSync(__dirname + '/fixtures/app.js', 'utf-8')
 
-var pod        = require('../lib/core').initTest(testConfig)
+// overwrtie config with test setup
+var testConfPath = root + '/.podrc',
+    testConf = fs.readFileSync(__dirname + '/fixtures/.podrc', 'utf-8')
 
-pod.on('ready', function () {
-    exec('rm -rf ' + testConfig.root, function (err) {
-        if (err) return done(err)
-        fs.mkdirSync(testConfig.root)
-        fs.mkdirSync(appsDir)
-        fs.mkdirSync(reposDir)
-        fs.mkdirSync(logsDir)
-        ready()
-    })
+process.env.POD_CONF = testConfPath
+
+var pod, ready
+
+exec('rm -rf ' + root, function (err) {
+    if (err) return done(err)
+    fs.mkdirSync(root)
+    fs.mkdirSync(appsDir)
+    fs.mkdirSync(reposDir)
+    fs.mkdirSync(logsDir)
+    fs.writeFileSync(testConfPath, testConf.replace('{{root}}', root))
+    pod = require('../lib/api')
+    pod.on('ready', ready)
+})
+
+before(function (done) {
+    ready = done
 })
 
 describe('API', function () {
-
-    before(function (done) {
-        ready = done
-    })
 
     describe('.createApp( appname, [options,] callback )', function () {
 
@@ -280,6 +279,53 @@ describe('API', function () {
 
     })
 
+})
+
+describe('git push', function () {
+
+    var app, git, beforeRestartStamp
+
+    before(function (done) {
+        app = pod.getAppInfo('test2')
+        git = 'git' +
+            ' --git-dir=' + app.workPath + '/.git' +
+            ' --work-tree=' + app.workPath
+        
+        // add custom hook
+        fs.writeFileSync(app.workPath + '/.podhook', 'touch testfile')
+        
+        // modify git post-receive hook for test
+        var hookPath = app.repoPath + '/hooks/post-receive',
+            hook = fs.readFileSync(hookPath, 'utf-8').replace(/^pod\s/g, 'POD_CONF=' + testConfPath + ' pod ')
+        fs.writeFileSync(hookPath, hook)
+        
+        exec(
+            git + ' add ' + app.workPath + '; ' +
+            git + ' commit -m \'test\'',
+            done
+        )
+    })
+
+    it('shoud complete without error', function (done) {
+        beforeRestartStamp = Date.now()
+        exec(git + ' push', done)
+    })
+
+    it('should have restarted the app', function (done) {
+        expectRestart(testPort + 1, beforeRestartStamp, done)
+    })
+
+    it('should have executed the custom hook', function () {
+        assert.ok(fs.existsSync(app.workPath + '/testfile'))
+    })
+    
+})
+
+after(function (done) {
+    pod.stopAllApps(function () {
+        done()
+        exec('rm -rf ' + root, done)
+    })
 })
 
 function expectRestart (port, beforeRestartStamp, done) {
