@@ -13,5 +13,4 @@ fi
 
 # pod restart will not use latest env variables in config
 pod stop {{app}}
-pod cleanlogs {{app}}
 pod start {{app}}

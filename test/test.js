@@ -7,7 +7,6 @@ var assert = require('assert'),
 var root       = path.resolve(__dirname, '../temp'),
     appsDir    = root + '/apps',
     reposDir   = root + '/repos',
-    logsDir    = root + '/logs'
     testPort   = process.env.PORT || 18080,
     stubScript = fs.readFileSync(__dirname + '/fixtures/app.js', 'utf-8')
 
@@ -24,7 +23,6 @@ exec('rm -rf ' + root, function (err) {
     fs.mkdirSync(root)
     fs.mkdirSync(appsDir)
     fs.mkdirSync(reposDir)
-    fs.mkdirSync(logsDir)
     fs.writeFileSync(testConfPath, testConf.replace('{{root}}', root))
     pod = require('../lib/api')
     pod.on('ready', ready)
@@ -45,7 +43,7 @@ describe('API', function () {
                 function (err, msgs, appInfo) {
                     if (err) return done(err)
                     assert.ok(appInfo, 'callback should receive appInfo object')
-                    assert.equal(msgs.length, 5, 'should return 5 messages')
+                    assert.equal(msgs.length, 4, 'should return 4 messages')
                     assert.equal(appInfo.config.port, testPort, 'options should be written to app config')
                     done()
                 }
@@ -60,7 +58,6 @@ describe('API', function () {
         it('should create the app\'s directories', function () {
             assert.ok(fs.existsSync(appsDir + '/test'), 'should created working copy')
             assert.ok(fs.existsSync(reposDir + '/test.git'), 'should created git repo')
-            assert.ok(fs.existsSync(logsDir + '/test'), 'should created logs dir')
         })
 
         it('should return error if app with that name already exists', function (done) {
@@ -74,7 +71,7 @@ describe('API', function () {
             pod.createApp('test2', function (err, msgs, appInfo) {
                 if (err) return done(err)
                 assert.ok(appInfo, 'callback should receive appInfo object')
-                assert.equal(msgs.length, 5, 'should return 5 messages')
+                assert.equal(msgs.length, 4, 'should return 4 messages')
                 done()
             })
         })
@@ -254,27 +251,11 @@ describe('API', function () {
         
         it('should remove all the app files', function () {
             assert.ok(!fs.existsSync(app.workPath), 'working copy')
-            assert.ok(!fs.existsSync(app.logPath), 'logs dir')
             assert.ok(!fs.existsSync(app.repoPath), 'git repo')
         })
 
         it('should have stopped the deleted app\'s process', function (done) {
             expectBadPort(testPort, done)
-        })
-
-    })
-
-    describe('.cleanAppLog( appname, callback )', function () {
-        
-        it('should remove all log files for the app', function (done) {
-            var app = pod.getAppInfo('test2')
-            pod.cleanAppLog('test2', function (err) {
-                if (err) return done(err)
-                assert.ok(!fs.existsSync(app.logPath + '/forever.log'), 'forever')
-                assert.ok(!fs.existsSync(app.logPath + '/stdout.log'), 'stdout')
-                assert.ok(!fs.existsSync(app.logPath + '/stderr.log'), 'stderr')
-                done()
-            })
         })
 
     })

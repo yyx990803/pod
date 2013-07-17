@@ -92,7 +92,6 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
     startall                Start all apps not already running
     stopall                 Stop all apps
     restartall              Restart all running apps
-    cleanlogs <app>         Clean up logs for an app
     edit <app>              Edit the app's post-receive hook
     config                  Edit config file
     help                    You are reading it right now
