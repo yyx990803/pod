@@ -94,7 +94,7 @@ describe('API', function () {
 	describe('.startApp( appname, callback )', function () {
 
 		before(function () {
-			var script = stubScript.replace('{{port}}', testPort)
+			var script = stubScript.replace('{{port}}', testPort - 1)
 			fs.writeFileSync(appsDir + '/test/app.js', script)
 		})
 
