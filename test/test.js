@@ -18,32 +18,23 @@ var appsDir    = testConfig.dir + '/apps',
 	testPort   = process.env.PORT || 18080,
 	stubScript = fs.readFileSync(__dirname + '/fixtures/app.js', 'utf-8')
 
-var	pod        = require('../lib/core').initTest(testConfig),
-	ready      = false
+var	pod        = require('../lib/core').initTest(testConfig)
 
 pod.on('ready', function () {
-    if (ready) {
-    	ready()
-    } else {
-    	ready = true
-    }
+    exec('rm -rf ' + testConfig.dir, function (err) {
+        if (err) return done(err)
+        fs.mkdirSync(testConfig.dir)
+		fs.mkdirSync(appsDir)
+		fs.mkdirSync(reposDir)
+		fs.mkdirSync(logsDir)
+		ready()
+	})
 })
 
 describe('API', function () {
 
 	before(function (done) {
-	    exec('rm -rf ' + testConfig.dir, function (err) {
-	        if (err) return done(err)
-	        fs.mkdirSync(testConfig.dir)
-			fs.mkdirSync(appsDir)
-			fs.mkdirSync(reposDir)
-			fs.mkdirSync(logsDir)
-			if (ready) {
-				done()
-			} else {
-				ready = done
-			}
-		})
+		ready = done
 	})
 
 	describe('.createApp( appname, [options,] callback )', function () {
@@ -160,8 +151,8 @@ describe('API', function () {
 		it('should not get an error', function (done) {
 		    pod.stopAllApps(function (err, msgs) {
 		    	if (err) return done(err)
-		    	// assert.ok(Array.isArray(msgs), 'should get an array of messages')
-		     	// assert.equal(msgs.length, 2, 'should get two message')
+		    	assert.ok(Array.isArray(msgs), 'should get an array of messages')
+		     	assert.equal(msgs.length, 2, 'should get two message')
 		        done()
 		    })
 		})
@@ -232,7 +223,12 @@ describe('API', function () {
 
 		it('should get no error', function (done) {
 		    beforeRestartStamp = Date.now()
-		    pod.restartAllApps(done)
+		    pod.restartAllApps(function (err, msgs) {
+		    	if (err) return done(err)
+		        assert.ok(Array.isArray(msgs), 'should get an array of messages')
+		     	assert.equal(msgs.length, 1, 'should get only one message')
+		     	done()
+		    })
 		})
 
 		it('should have indeed restarted the running process', function (done) {
