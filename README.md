@@ -1,10 +1,16 @@
 # POD - git push deploy for Node.js
 
-**WARNING:** test suite not complete, use with caution!
-
 Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server. Perfect for experimenting with Node stuff on a VPS. It is built upon git hooks and [pm2](https://github.com/Unitech/pm2).
 
 It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but you can use pod to run a [node-http-proxy](https://github.com/nodejitsu/node-http-proxy) server on port 80 that routes incoming requests to other apps.
+
+## Important changes in 0.4.0
+
+- switched the underlying monitor library from forever to pm2. pm2 is included as a dependency so you can simply link its `bin/pm2` to your `/usr/local/bin` or other executable paths, and then you can invoke `pm2` directly for more detailed monitoring.
+
+- the config is now a single json file `.podrc` instead of a folder. Also the config fields have changed a bit, see _Config_ below for details. You might need to manually migrate the old app configs over. After that you can delete the old `.podconfig`.
+
+- included unit tests for core functionalities (`npm test`)
 
 ## Prerequisites
 
@@ -37,8 +43,6 @@ $ git push deploy master
 ```
 
 That's it! App should be automatically running after the push. For later pushes, app process will be restarted.  
-
-You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push.
 
 ## Installation
 
@@ -80,7 +84,7 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
 
     create <app>            Create a new app
     rm <app>                Delete an app
-    start <app>             Start an app with forever
+    start <app>             Start an app monitored by pm2
     stop <app>              Stop an app
     restart <app>           Restart an app, start if not already running
     list                    List apps and status
@@ -97,11 +101,26 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
 
 ## Config
 
-Config files are json files located in `~/.podrc`. Global options are inside `global.json`, and each app's individual config is in `app-configs/`.
+Example Config:
 
-App specific config options:
+``` js
+{
+    "root": "/srv",
+    "nodeEnv": "development",
+    "defaultScript": "app.js",
+    "editor": "vi",
+    "apps": {
+        "example": {
+            "nodeEnv": "production", // passed to the app as process.env.NODE_ENV
+            "port": 8080 // passed to the app as process.env.PORT
+            // any valid pm2 config here gets passed to pm2
+        }
+    }
+}
+```
 
-- env        : will be passed in as `process.env.NODE_ENV`
-- port       : will be passed in as `process.env.PORT`
-- maxRespawn : max times forever will attempt to restart process
-- options    : an array of command line arguments to be passed to the app
+## Custom post-receive hook
+
+You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push.
+
+Or, if you prefer to include the hook with the repo, just place a `.podhook` file in your app, which can contain shell scripts that will be executed after push.

@@ -6,7 +6,7 @@ var assert = require('assert'),
 
 var testConfig = {
     root: path.resolve(__dirname, '../temp'),
-    env: 'development',
+    nodeEnv: 'development',
     defaultScript: 'app.js',
     editor: 'vi',
     apps: {}

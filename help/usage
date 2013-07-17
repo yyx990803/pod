@@ -5,7 +5,7 @@
 
     create <app>            Create a new app
     rm <app>                Delete an app
-    start <app>             Start an app with forever
+    start <app>             Start an app monitoed by pm2
     stop <app>              Stop an app
     restart <app>           Restart an app, start if not already running
     list                    List apps and status
