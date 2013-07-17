@@ -8,7 +8,7 @@ It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but y
 
 - switched the underlying monitor library from forever to pm2. pm2 is included as a dependency so you can simply link its `bin/pm2` to your `/usr/local/bin` or other executable paths, and then you can invoke `pm2` directly for more detailed monitoring.
 
-- the config is now a single json file `.podrc` instead of a folder. Also the config fields have changed a bit, see _Config_ below for details. You might need to manually migrate the old app configs over. After that you can delete the old `.podconfig`.
+- the config is now a single json file `.podrc` instead of a folder. Also the config fields have changed a bit, see *Config* section below for details. You might need to manually migrate the old app configs over. After that you can delete the old `.podconfig`.
 
 - included unit tests for core functionalities (`npm test`)
 
