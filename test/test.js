@@ -5,25 +5,25 @@ var assert = require('assert'),
 	exec   = require('child_process').exec
 
 var testConfig = {
-    dir: path.resolve(__dirname, '../temp'),
+    root: path.resolve(__dirname, '../temp'),
     env: 'development',
     defaultScript: 'app.js',
     editor: 'vi',
     apps: {}
 }
 
-var appsDir    = testConfig.dir + '/apps',
-	reposDir   = testConfig.dir + '/repos',
-	logsDir    = testConfig.dir + '/logs'
+var appsDir    = testConfig.root + '/apps',
+	reposDir   = testConfig.root + '/repos',
+	logsDir    = testConfig.root + '/logs'
 	testPort   = process.env.PORT || 18080,
 	stubScript = fs.readFileSync(__dirname + '/fixtures/app.js', 'utf-8')
 
 var	pod        = require('../lib/core').initTest(testConfig)
 
 pod.on('ready', function () {
-    exec('rm -rf ' + testConfig.dir, function (err) {
+    exec('rm -rf ' + testConfig.root, function (err) {
         if (err) return done(err)
-        fs.mkdirSync(testConfig.dir)
+        fs.mkdirSync(testConfig.root)
 		fs.mkdirSync(appsDir)
 		fs.mkdirSync(reposDir)
 		fs.mkdirSync(logsDir)
