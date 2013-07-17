@@ -12,13 +12,22 @@ var testConfig = {
     apps: {}
 }
 
-var testPort   = process.env.PORT || 18080,
+var appsDir    = testConfig.dir + '/apps',
+	reposDir   = testConfig.dir + '/repos',
+	logsDir    = testConfig.dir + '/logs'
+	testPort   = process.env.PORT || 18080,
 	stubScript = fs.readFileSync(__dirname + '/fixtures/app.js', 'utf-8')
 
 var	pod        = require('../lib/core').initTest(testConfig),
-	appsDir    = testConfig.dir + '/apps',
-	reposDir   = testConfig.dir + '/repos',
-	logsDir    = testConfig.dir + '/logs'
+	ready      = false
+
+pod.on('ready', function () {
+    if (ready) {
+    	ready()
+    } else {
+    	ready = true
+    }
+})
 
 describe('API', function () {
 
@@ -29,7 +38,11 @@ describe('API', function () {
 			fs.mkdirSync(appsDir)
 			fs.mkdirSync(reposDir)
 			fs.mkdirSync(logsDir)
-			killTestProcs(done)
+			if (ready) {
+				done()
+			} else {
+				ready = done
+			}
 		})
 	})
 
@@ -91,20 +104,13 @@ describe('API', function () {
 
     	it('should abort if app is already running', function (done) {
 		    pod.startApp('test', function (err, msg) {
-    	        assert.ok(/already\srunning/.test(err.toString()), 'callback should receive right error')
+    	        assert.ok(/already\srunning/.test(msg), 'callback should receive right error')
     	        done()
     	    })
     	})
 
     	it('should accept http request on port ' + testPort, function (done) {
-	        http.get('http://localhost:' + testPort, function (res) {
-    	        assert.equal(res.statusCode, 200)
-    	        res.setEncoding('utf-8')
-    	        res.on('data', function (data) {
-    	            assert.ok(/ok!/.test(data))
-    	            done()
-    	        })
-    	    })
+	        expectWorkingPort(testPort, done)
     	})
 
 	})
@@ -120,17 +126,7 @@ describe('API', function () {
 		})
 
 		it('should no longer be using port ' + testPort, function (done) {
-			var req = http.get('http://localhost:' + testPort, function (res) {
-				res.setEncoding('utf-8')
-			    res.on('data', function (data) {
-			    	console.log(data)
-			        done()
-			    })
-			})
-			req.on('error', function (err) {
-			    assert.equal(err.code, 'ECONNREFUSED')
-			    done()
-			})
+			expectBadPort(testPort, done)
 		})
 
 	})
@@ -152,24 +148,9 @@ describe('API', function () {
 		})
 
 		it('should accept http request on both ports', function (done) {
-			// first port
-	        http.get('http://localhost:' + testPort, function (res) {
-    	        assert.equal(res.statusCode, 200)
-    	        res.setEncoding('utf-8')
-    	        res.on('data', function (data) {
-    	            assert.ok(/ok!/.test(data))
-    	            // second port
-    	            http.get('http://localhost:' + (testPort + 1), function (res) {
-		    	        assert.equal(res.statusCode, 200)
-		    	        res.setEncoding('utf-8')
-		    	        res.on('data', function (data) {
-		    	            assert.ok(/ok!/.test(data))
-		    	            done()
-		    	        })
-		    	    })
-
-    	        })
-    	    })
+			expectWorkingPort(testPort, function () {
+			    expectWorkingPort(testPort + 1, done)
+			})
     	})
 
 	})
@@ -186,16 +167,8 @@ describe('API', function () {
 		})
 
 		it('should no longer be using the two ports', function (done) {
-			// port1
-			var req = http.get('http://localhost:' + testPort)
-			req.on('error', function (err) {
-			    assert.equal(err.code, 'ECONNREFUSED')
-			    // port 2
-			    var req2 = http.get('http://localhost:' + (testPort + 1))
-			    req2.on('error', function (err) {
-			        assert.equal(err.code, 'ECONNREFUSED')
-			        done()
-			    })
+			expectBadPort(testPort, function () {
+			    expectBadPort(testPort + 1, done)
 			})
 		})
 
@@ -237,23 +210,11 @@ describe('API', function () {
 	    
 		it('should restart a running app without error', function (done) {
 			beforeRestartStamp = Date.now()
-		    pod.restartApp('test', function (err, msg) {
-		        if (err) return done(err)
-		        setTimeout(done, 500)
-		    })
+		    pod.restartApp('test', done)
 		})
 
 		it('should have indeed restarted the process', function (done) {
-		    http.get('http://localhost:' + testPort, function (res) {
-    	        assert.equal(res.statusCode, 200)
-    	        res.setEncoding('utf-8')
-    	        res.on('data', function (data) {
-    	            var restartStamp = data.match(/\((\d+)\)/)[1]
-    	            restartStamp = parseInt(restartStamp, 10)
-    	            assert.ok(restartStamp > beforeRestartStamp)
-    	            done()
-    	        })
-    	    })
+		    expectRestart(testPort, beforeRestartStamp, done)
 		})
 
 		it('should get an error trying to restart a non-running app', function (done) {
@@ -269,35 +230,17 @@ describe('API', function () {
 	    
 		var beforeRestartStamp
 
-		it('should restart only apps that are running', function (done) {
+		it('should get no error', function (done) {
 		    beforeRestartStamp = Date.now()
-		    pod.restartAllApps(function (err, msgs) {
-		        if (err) return done(err)
-		        assert.ok(Array.isArray(msgs))
-		        assert.equal(msgs.length, 1)
-		        setTimeout(done, 500)
-		    })
+		    pod.restartAllApps(done)
 		})
 
 		it('should have indeed restarted the running process', function (done) {
-		    http.get('http://localhost:' + testPort, function (res) {
-    	        assert.equal(res.statusCode, 200)
-    	        res.setEncoding('utf-8')
-    	        res.on('data', function (data) {
-    	            var restartStamp = data.match(/\((\d+)\)/)[1]
-    	            restartStamp = parseInt(restartStamp, 10)
-    	            assert.ok(restartStamp > beforeRestartStamp)
-    	            done()
-    	        })
-    	    })
+		    expectRestart(testPort, beforeRestartStamp, done)
 		})
 
 		it('should not start the non-running app', function (done) {
-		    var req = http.get('http://localhost:' + (testPort + 1))
-			req.on('error', function (err) {
-			    assert.equal(err.code, 'ECONNREFUSED')
-			    done()
-			})
+		    expectBadPort(testPort + 1, done)
 		})
 
 	})
@@ -321,17 +264,7 @@ describe('API', function () {
 		})
 
 		it('should have stopped the deleted app\'s process', function (done) {
-		    var req = http.get('http://localhost:' + testPort, function (res) {
-		    	res.setEncoding('utf-8')
-		        res.on('data', function (data) {
-		            console.log(data)
-		            done()
-		        })
-		    })
-			req.on('error', function (err) {
-			    assert.equal(err.code, 'ECONNREFUSED')
-			    done()
-			})
+		    expectBadPort(testPort, done)
 		})
 
 	})
@@ -351,14 +284,48 @@ describe('API', function () {
 
 	})
 
-	after(killTestProcs)
-
 })
 
-function killTestProcs (done) {
-	// kill test processes in case not stopped in test
-	// http://stackoverflow.com/questions/3510673/find-and-kill-a-process-in-one-line-using-bash-and-regex
-	exec("kill $(ps ax | grep '[t]emp/apps/test.*/app\.js' | awk '{print $1}')", function () {
-	    done()
+function expectRestart (port, beforeRestartStamp, done) {
+    http.get('http://localhost:' + port, function (res) {
+        assert.equal(res.statusCode, 200)
+        res.setEncoding('utf-8')
+        res.on('data', function (data) {
+            var restartStamp = data.match(/\((\d+)\)/)[1]
+            restartStamp = parseInt(restartStamp, 10)
+            assert.ok(restartStamp > beforeRestartStamp)
+            done()
+        })
+    })
+}
+
+function expectWorkingPort (port, done) {
+    http.get('http://localhost:' + port, function (res) {
+        assert.equal(res.statusCode, 200)
+        res.setEncoding('utf-8')
+        res.on('data', function (data) {
+            assert.ok(/ok!/.test(data))
+            done()
+        })
+    })
+}
+
+function expectBadPort (port, done) {
+    var timeout = false,
+		refused = false
+	var req = http.get('http://localhost:' + port, function (res) {
+	    res.on('data', function () {
+	    	if (!timeout) done(new Error('should not get data back'))
+	    })
 	})
+	req.on('error', function (err) {
+	    if (err.code === 'ECONNREFUSED') {
+	    	refused = true
+	    	done()
+	    }
+	})
+	setTimeout(function () {
+	    timeout = true
+	    if (!refused) done()
+	}, 300)
 }
