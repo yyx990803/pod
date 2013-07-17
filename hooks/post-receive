@@ -8,7 +8,7 @@ env -i git pull
 if [ -f .podhook ]; then
 	bash .podhook
 else
-	npm install --development
+	npm install
 fi
 
 # pod restart will not use latest env variables in config
