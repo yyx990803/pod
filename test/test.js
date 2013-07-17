@@ -39,7 +39,10 @@ describe('API', function () {
         it('should complete without error and invoke callback', function (done) {
             pod.createApp(
                 'test',
-                { port: testPort },
+                {
+                    port: testPort,
+                    instances: 2
+                },
                 function (err, msgs, appInfo) {
                     if (err) return done(err)
                     assert.ok(appInfo, 'callback should receive appInfo object')
@@ -129,7 +132,7 @@ describe('API', function () {
             pod.startAllApps(function (err, msgs) {
                 if (err) return done(err)
                 assert.ok(Array.isArray(msgs), 'should get an array of messages')
-                assert.equal(msgs.length, 2, 'should get two message')
+                assert.equal(msgs.length, 2, 'should get two messages')
                 done()
             })
         })
@@ -181,10 +184,10 @@ describe('API', function () {
         it('should contain correct app running status', function () {
             appsResult.forEach(function (app) {
                 if (app.name === 'test') {
-                    assert.ok(app.isRunning, 'test should be on')
+                    assert.ok(app.instances, 'test should be on')
                 }
                 if (app.name === 'test2') {
-                    assert.ok(!appsResult[1].isRunning, 'test2 should be off')
+                    assert.ok(!app.instances, 'test2 should be off')
                 }
             })
         })
@@ -217,12 +220,12 @@ describe('API', function () {
         
         var beforeRestartStamp
 
-        it('should get no error', function (done) {
+        it('should stop all running instances', function (done) {
             beforeRestartStamp = Date.now()
             pod.restartAllApps(function (err, msgs) {
                 if (err) return done(err)
                 assert.ok(Array.isArray(msgs), 'should get an array of messages')
-                assert.equal(msgs.length, 1, 'should get only one message')
+                assert.equal(msgs.length, 2, 'should get 2 messages (test has 2 instances)')
                 done()
             })
         })
