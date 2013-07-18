@@ -6,7 +6,7 @@ It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but y
 
 ## Important changes in 0.4.0
 
-- switched the underlying monitor library from forever to pm2. pm2 is included as a dependency so you can simply link its `bin/pm2` to your `/usr/local/bin` or other executable paths, and then you can invoke `pm2` directly for more detailed monitoring.
+- switched the underlying monitor library from forever to pm2. pm2 is included as a dependency so you can simply link its executable for logging and monitoring. (see below)
 
 - the config is now a single json file `.podrc` instead of a folder. Also the config fields have changed a bit, see *Config* section below for details. You might need to manually migrate the old app configs over. After that you can delete the old `.podconfig`.
 
@@ -65,16 +65,12 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
 ├── repos # holds the bare .git repos
 │   └── example.git
 ├── apps # holds the working copies
-│   └── example
-│       └──app.js
-└── logs # holds the logs
     └── example
-        ├── forever.log
-        ├── stdout.log
-        └── stderr.log
+        ├──app.js
+        └──.podhook
 ```
 
-## Usage
+## CLI Usage
 
 ```
 
@@ -117,6 +113,10 @@ Example Config:
     }
 }
 ```
+
+## Logging & Monitoring
+
+Since pod uses pm2 under the hood, logging is delegated to `pm2`. It's recommended to link `path/to/pod/node_modules/pm2/bin/pm2` to your `/usr/local/bin` so that you can use `pm2 monit` and `pm2 logs` to analyze more detailed app info. Note that all pod commands only concerns apps present in pod's config file, so it's fine if you use pm2 separately to run additional processes.
 
 ## Custom post-receive hook
 
