@@ -247,8 +247,13 @@ describe('API', function () {
                 done()
             })
         })
+
+        it('should have deleted the app from config', function () {
+            var config = pod.getConfig()
+            assert.ok(!('test' in config.apps), 'test should no longer be in apps')
+        })
         
-        it('should remove all the app files', function () {
+        it('should have removed all the app files', function () {
             assert.ok(!fs.existsSync(app.workPath), 'working copy')
             assert.ok(!fs.existsSync(app.repoPath), 'git repo')
         })
