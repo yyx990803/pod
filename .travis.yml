@@ -3,5 +3,5 @@ node_js:
   - "0.10"
   - "0.8"
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq git
+  - git config --global user.email "yyx990803@gmail.com"
+  - git config --global user.name "Evan You"
