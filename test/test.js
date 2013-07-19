@@ -288,7 +288,7 @@ describe('git push', function () {
 
     it('shoud complete without error', function (done) {
         beforeRestartStamp = Date.now()
-        exec(git + ' push', done)
+        exec(git + ' push origin master', done)
     })
 
     it('should have restarted the app', function (done) {
