@@ -7,7 +7,6 @@
     "email": "yyx990803@gmail.com"
   },
   "dependencies": {
-    "optimist": "~0.6.0",
     "pm2": "~0.5.2",
     "colors": "~0.6.0",
     "async": "~0.2.9"
