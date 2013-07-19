@@ -4,32 +4,28 @@ var assert = require('assert'),
     http   = require('http'),
     exec   = require('child_process').exec
 
-var root       = path.resolve(__dirname, '../temp'),
-    appsDir    = root + '/apps',
-    reposDir   = root + '/repos',
-    testPort   = process.env.PORT || 18080,
-    stubScript = fs.readFileSync(__dirname + '/fixtures/app.js', 'utf-8')
-
-// overwrtie config with test setup
-var testConfPath = root + '/.podrc',
-    testConf = fs.readFileSync(__dirname + '/fixtures/.podrc', 'utf-8')
-
+var root         = path.resolve(__dirname, '../temp'),
+    appsDir      = root + '/apps',
+    reposDir     = root + '/repos',
+    testPort     = process.env.PORT || 18080,
+    testConfPath = root + '/.podrc',
+    testConf     = fs.readFileSync(__dirname + '/fixtures/.podrc', 'utf-8'),
+    stubScript   = fs.readFileSync(__dirname + '/fixtures/app.js', 'utf-8')
+    
 process.env.POD_CONF = testConfPath
 
-var pod, ready
-
-exec('rm -rf ' + root, function (err) {
-    if (err) return done(err)
-    fs.mkdirSync(root)
-    fs.mkdirSync(appsDir)
-    fs.mkdirSync(reposDir)
-    fs.writeFileSync(testConfPath, testConf.replace('{{root}}', root))
-    pod = require('../lib/api')
-    pod.on('ready', ready)
-})
+var pod
 
 before(function (done) {
-    ready = done
+    exec('rm -rf ' + root, function (err) {
+        if (err) return done(err)
+        fs.mkdirSync(root)
+        fs.mkdirSync(appsDir)
+        fs.mkdirSync(reposDir)
+        fs.writeFileSync(testConfPath, testConf.replace('{{root}}', root))
+        pod = require('../lib/api')
+        pod.on('ready', done)
+    })
 })
 
 describe('API', function () {
@@ -306,8 +302,8 @@ describe('git push', function () {
 })
 
 after(function (done) {
-    pod.stopAllApps(function () {
-        done()
+    pod.stopAllApps(function (err) {
+        if (err) return done(err)
         exec('rm -rf ' + root, done)
     })
 })
