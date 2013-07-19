@@ -5,3 +5,5 @@ node_js:
 before_install:
   - git config --global user.email "yyx990803@gmail.com"
   - git config --global user.name "Evan You"
+before_script:
+  - npm link
