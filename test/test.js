@@ -147,7 +147,7 @@ describe('API', function () {
             pod.stopAllApps(function (err, msgs) {
                 if (err) return done(err)
                 assert.ok(Array.isArray(msgs), 'should get an array of messages')
-                assert.equal(msgs.length, 2, 'should get two message')
+                assert.equal(msgs.length, 2, 'should get two messages')
                 done()
             })
         })
