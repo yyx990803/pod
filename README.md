@@ -64,7 +64,7 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
 .
 ├── repos # holds the bare .git repos
 │   └── example.git
-├── apps # holds the working copies
+└── apps # holds the working copies
     └── example
         ├──app.js
         └──.podhook
@@ -84,7 +84,6 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
     stop <app>              Stop an app
     restart <app>           Restart an app, start if not already running
     list                    List apps and status
-    procs                   List all app and monitor processes
     startall                Start all apps not already running
     stopall                 Stop all apps
     restartall              Restart all running apps
