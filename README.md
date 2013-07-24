@@ -1,6 +1,6 @@
 # POD - git push deploy for Node.js [![Build Status](https://travis-ci.org/yyx990803/pod.png?branch=master)](https://travis-ci.org/yyx990803/pod)
 
-Core API JSCoverage: **92.93%**
+Core API JSCoverage: **94.57%**
 
 Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server. Perfect for experimenting with Node stuff on a VPS. It is built upon git hooks and [pm2](https://github.com/Unitech/pm2).
 

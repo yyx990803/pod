@@ -1,4 +1,0 @@
-use commander for CLI
-tests
-	- git push
-	- test hook
