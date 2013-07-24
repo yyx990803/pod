@@ -12,7 +12,8 @@
     "async": "~0.2.9"
   },
   "devDependencies": {
-    "mocha": "~1.12.0"
+    "mocha": "~1.12.0",
+    "jscoverage": "~0.3.7"
   },
   "keywords": [
     "cli",
