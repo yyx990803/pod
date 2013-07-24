@@ -7,7 +7,7 @@ var assert = require('assert'),
 
 jsc.enableCoverage(true)
 
-var temp         = path.resolve(__dirname, 'temp'),
+var temp         = path.resolve(__dirname, '../temp'),
     root         = temp + '/root',
     appsDir      = root + '/apps',
     reposDir     = root + '/repos',
@@ -365,7 +365,7 @@ describe('git push', function () {
 after(function (done) {
     pod.stopAllApps(function (err) {
         if (err) return done(err)
-        exec('rm -rf ' + root, done)
+        exec('rm -rf ' + temp, done)
     })
 })
 
@@ -385,14 +385,16 @@ function expectRestart (port, beforeRestartStamp, done) {
 }
 
 function expectWorkingPort (port, done) {
-    http.get('http://localhost:' + port, function (res) {
-        assert.equal(res.statusCode, 200)
-        res.setEncoding('utf-8')
-        res.on('data', function (data) {
-            assert.ok(/ok!/.test(data))
-            done()
+    setTimeout(function () {
+        http.get('http://localhost:' + port, function (res) {
+            assert.equal(res.statusCode, 200)
+            res.setEncoding('utf-8')
+            res.on('data', function (data) {
+                assert.ok(/ok!/.test(data))
+                done()
+            })
         })
-    })
+    }, 100) // small interval to make sure it has finished
 }
 
 function expectBadPort (port, done) {
