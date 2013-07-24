@@ -7,7 +7,7 @@ env -i git pull
 # if has .podhook, execute that; otherwise default
 if [ -f .podhook ]; then
 	bash .podhook
-if [ -f package.json ]; then
+elif [ -f package.json ]; then
 	npm install
 fi
 

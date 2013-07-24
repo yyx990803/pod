@@ -2,31 +2,53 @@ var assert = require('assert'),
     fs     = require('fs'),
     path   = require('path'),
     http   = require('http'),
-    exec   = require('child_process').exec
+    exec   = require('child_process').exec,
+    jsc    = require('jscoverage')
 
-var root         = path.resolve(__dirname, '../temp'),
+jsc.enableCoverage(true)
+
+var temp         = path.resolve(__dirname, 'temp'),
+    root         = temp + '/root',
     appsDir      = root + '/apps',
     reposDir     = root + '/repos',
-    testPort     = process.env.PORT || 18080,
-    testConfPath = root + '/.podrc',
-    testConf     = fs.readFileSync(__dirname + '/fixtures/.podrc', 'utf-8'),
-    stubScript   = fs.readFileSync(__dirname + '/fixtures/app.js', 'utf-8')
+    testConfPath = temp + '/.podrc',
+    testConf     = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podrc'), 'utf-8'),
+    stubScript   = fs.readFileSync(path.resolve(__dirname, 'fixtures/app.js'), 'utf-8'),
+    testPort     = process.env.PORT || 18080
     
 process.env.POD_CONF = testConfPath
 
 var pod
 
+// setup ----------------------------------------------------------------------
+
 before(function (done) {
-    exec('rm -rf ' + root, function (err) {
+    if (process.platform === 'darwin') {
+        // kill the pm2 daemon first.
+        // the daemon would malfunction if the Mac went to sleep mode.
+        exec('killall "pm2: Satan Daemonizer"', function (err) {
+            if (!err || err.toString().match(/No matching processes/)) {
+                setup(done)
+            } else {
+                done(err)
+            }
+        })
+    } else {
+        setup(done)
+    }
+})
+
+function setup (done) {
+    exec('rm -rf ' + temp, function (err) {
         if (err) return done(err)
-        fs.mkdirSync(root)
-        fs.mkdirSync(appsDir)
-        fs.mkdirSync(reposDir)
+        fs.mkdirSync(temp)
         fs.writeFileSync(testConfPath, testConf.replace('{{root}}', root))
-        pod = require('../lib/api')
+        pod = jsc.require(module, '../lib/api')
         pod.on('ready', done)
     })
-})
+}
+
+// tests ----------------------------------------------------------------------
 
 describe('API', function () {
 
@@ -79,12 +101,16 @@ describe('API', function () {
 
     describe('.startApp( appname, callback )', function () {
 
-        before(function () {
-            var script = stubScript.replace('{{port}}', testPort - 1)
-            fs.writeFileSync(appsDir + '/test/app.js', script)
+        it('should get an error if cannot locate main script', function (done) {
+            pod.startApp('test', function (err) {
+                assert.ok(/cannot locate main script/.test(err.toString()))
+                done()
+            })
         })
 
         it('should complete without error and invoke callback', function (done) {
+            var script = stubScript.replace('{{port}}', testPort - 1)
+            fs.writeFileSync(appsDir + '/test/app.js', script)
             pod.startApp('test', done)
         })
 
@@ -97,6 +123,13 @@ describe('API', function () {
 
         it('should accept http request on port ' + testPort, function (done) {
             expectWorkingPort(testPort, done)
+        })
+
+        it('should return error if app does not exist', function (done) {
+            pod.startApp('doesnotexist', function (err) {
+                assert.ok(/does not exist/.test(err.toString()))
+                done()
+            })
         })
 
     })
@@ -113,6 +146,13 @@ describe('API', function () {
 
         it('should no longer be using port ' + testPort, function (done) {
             expectBadPort(testPort, done)
+        })
+
+        it('should return error if app does not exist', function (done) {
+            pod.stopApp('doesnotexist', function (err) {
+                assert.ok(/does not exist/.test(err.toString()))
+                done()
+            })
         })
 
     })
@@ -210,6 +250,13 @@ describe('API', function () {
             })
         })
 
+        it('should return error if app does not exist', function (done) {
+            pod.restartApp('doesnotexist', function (err) {
+                assert.ok(/does not exist/.test(err.toString()))
+                done()
+            })
+        })
+
     })
 
     describe('.restartAllApps()', function () {
@@ -262,6 +309,13 @@ describe('API', function () {
             expectBadPort(testPort, done)
         })
 
+        it('should return error if app does not exist', function (done) {
+            pod.removeApp('doesnotexist', function (err) {
+                assert.ok(/does not exist/.test(err.toString()))
+                done()
+            })
+        })
+
     })
 
 })
@@ -306,12 +360,16 @@ describe('git push', function () {
     
 })
 
+// clean up -------------------------------------------------------------------
+
 after(function (done) {
     pod.stopAllApps(function (err) {
         if (err) return done(err)
         exec('rm -rf ' + root, done)
     })
 })
+
+// helpers --------------------------------------------------------------------
 
 function expectRestart (port, beforeRestartStamp, done) {
     http.get('http://localhost:' + port, function (res) {
@@ -356,3 +414,9 @@ function expectBadPort (port, done) {
         if (!refused) done()
     }, 300)
 }
+
+// report coverage ------------------------------------------------------------
+
+process.on('exit', function () {
+    jsc.coverage()
+})
