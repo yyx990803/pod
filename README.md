@@ -6,14 +6,6 @@ Pod simplifies the workflow of setting up, updating and managing multiple Node.j
 
 It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but you can use pod to run a [node-http-proxy](https://github.com/nodejitsu/node-http-proxy) server on port 80 that routes incoming requests to other apps.
 
-## Important changes in 0.4.0
-
-- switched the underlying monitor library from forever to pm2. pm2 is included as a dependency so you can simply link its executable for logging and monitoring. (see below)
-
-- the config is now a single json file `.podrc` instead of a folder. Also the config fields have changed a bit, see *Config* section below for details. You might need to manually migrate the old app configs over. After that you can delete the old `.podconfig`.
-
-- included unit tests for core functionalities (`npm test`)
-
 ## Prerequisites
 
 - Node >= 0.8.x
@@ -52,7 +44,7 @@ That's it! App should be automatically running after the push. For later pushes,
 $ [sudo] npm install -g pod
 ```
 
-To make pod auto start all managed apps on system startup, you might also want write a simple [upstart](http://upstart.ubuntu.com) script that contains something like this:
+To make pod auto start all managed apps on system startup, you might also want to write a simple [upstart](http://upstart.ubuntu.com) script that contains something like this:
 
 ``` bash
 # /etc/init/pod.conf
@@ -124,3 +116,11 @@ Since pod uses pm2 under the hood, logging is delegated to `pm2`. It's recommend
 You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push.
 
 Or, if you prefer to include the hook with the repo, just place a `.podhook` file in your app, which can contain shell scripts that will be executed after push.
+
+## Important changes in 0.4.0
+
+- switched the underlying monitor library from forever to pm2. pm2 is included as a dependency so you can simply link its executable for logging and monitoring. (see below)
+
+- the config is now a single json file `.podrc` instead of a folder. Also the config fields have changed a bit, see *Config* section below for details. You might need to manually migrate the old app configs over. After that you can delete the old `.podconfig`.
+
+- included unit tests for core functionalities (`npm test`)
