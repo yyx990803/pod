@@ -157,6 +157,14 @@ describe('API', function () {
             })
         })
 
+        it('should return correct msg if app is not running', function (done) {
+            pod.stopApp('test', function (err, msg) {
+                assert.ok(!err)
+                assert.ok(/not running/.test(msg))
+                done()
+            })
+        })
+
     })
 
     describe('.startAllApps( callback )', function () {
@@ -423,4 +431,5 @@ function expectBadPort (port, done) {
 
 process.on('exit', function () {
     jsc.coverage()
+    jsc.coverageDetail()
 })

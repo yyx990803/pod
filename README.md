@@ -2,7 +2,7 @@
 
 ![screenshot](http://i.imgur.com/7ZQwDMk.png)
 
-Core API JSCoverage: **94.57%**
+Core API JSCoverage: **95.72%**
 
 Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a Linux server. Perfect for hosting personal Node stuff on a VPS. There are essentially two parts: 1. `git push` deploy (by using git hooks) and 2. process management (by using [pm2](https://github.com/Unitech/pm2))
 
@@ -103,7 +103,10 @@ Example Config:
             "nodeEnv": "production", // passed to the app as process.env.NODE_ENV
             "port": 8080, // passed to the app as process.env.PORT
             "instances": 2 // any valid pm2 config here gets passed to pm2
-            "args"      : "['--toto=heya coco', '-d', '1']"
+            "args": "['--toto=heya coco', '-d', '1']",
+            "fileOutput": "/absolute/path/to/stdout.log", // will be in ~/.pm2/logs if not specified
+            "fileError": "/absolute/path/to/stderr.log", // same as above
+            "pidFile": "/absolute/path/to/example1.pid" // will be in ~/.pm2/pids if not specified
         },
         "example2": {
             // if nothing is supplied, nodeEnv will inherit from global settings
