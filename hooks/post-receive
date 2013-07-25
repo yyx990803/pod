@@ -2,15 +2,21 @@
 
 # update working tree
 cd {{pod_dir}}/apps/{{app}}
-env -i git pull
+unset GIT_DIR
+git pull
 
 # if has .podhook, execute that; otherwise default
 if [ -f .podhook ]; then
 	bash .podhook
+	rc=$?
+	if [[ $rc != 0 ]]; then
+		echo "`tput setaf 1`ERROR: .podhook exited with code $rc, working tree is reverted.`tput sgr0`"
+		git reset `git reflog | awk 'NR==2 {print $1}'` --hard
+		exit $rc
+	fi
 elif [ -f package.json ]; then
 	npm install
 fi
 
-# pod restart will not use latest env variables in config
 pod stop {{app}}
 pod start {{app}}

@@ -96,13 +96,18 @@ Example Config:
 {
     "root": "/srv",
     "nodeEnv": "development",
-    "defaultScript": "app.js",
+    "defaultScript": "app.js", // this can be overwritten in each app's package.json's "main" field
     "editor": "vi",
     "apps": {
-        "example": {
+        "example1": {
             "nodeEnv": "production", // passed to the app as process.env.NODE_ENV
             "port": 8080, // passed to the app as process.env.PORT
             "instances": 2 // any valid pm2 config here gets passed to pm2
+            "args"      : "['--toto=heya coco', '-d', '1']"
+        },
+        "example2": {
+            // if nothing is supplied, nodeEnv will inherit from global settings
+            // if port is not set here, pod will try to sniff port from app's main script.
         }
     }
 }
@@ -116,7 +121,21 @@ Since pod uses pm2 under the hood, logging is delegated to `pm2`. It's recommend
 
 You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push.
 
-Or, if you prefer to include the hook with the repo, just place a `.podhook` file in your app, which can contain shell scripts that will be executed after push.
+Or, if you prefer to include the hook with the repo, just place a `.podhook` file in your app, which can contain shell scripts that will be executed after push, and before restarting the app. If `.podhook` exits with code other than 0, the app will not be restarted and will hard reset to the commit before the push.
+
+Example `.podhook`:
+
+``` bash
+component install
+npm install
+grunt build
+grunt test
+passed=$?
+if [[ $passed != 0 ]]; then
+    # test failed, exit. app's working tree on the server will be reset.
+    exit $passed
+fi
+```
 
 ## Important changes in 0.4.0
 

@@ -14,6 +14,7 @@ var temp         = path.resolve(__dirname, '../temp'),
     testConfPath = temp + '/.podrc',
     testConf     = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podrc'), 'utf-8'),
     stubScript   = fs.readFileSync(path.resolve(__dirname, 'fixtures/app.js'), 'utf-8'),
+    podhookStub  = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podhook'), 'utf-8'),
     testPort     = process.env.PORT || 18080
     
 process.env.POD_CONF = testConfPath
@@ -331,7 +332,7 @@ describe('git push', function () {
             ' --work-tree=' + app.workPath
         
         // add custom hook
-        fs.writeFileSync(app.workPath + '/.podhook', 'touch testfile')
+        fs.writeFileSync(app.workPath + '/.podhook', podhookStub)
         
         // modify git post-receive hook for test
         var hookPath = app.repoPath + '/hooks/post-receive',
