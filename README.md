@@ -1,8 +1,10 @@
 # POD - git push deploy for Node.js [![Build Status](https://travis-ci.org/yyx990803/pod.png?branch=master)](https://travis-ci.org/yyx990803/pod)
 
+![screenshot](http://i.imgur.com/7ZQwDMk.png)
+
 Core API JSCoverage: **94.57%**
 
-Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server. Perfect for experimenting with Node stuff on a VPS. It is built upon git hooks and [pm2](https://github.com/Unitech/pm2).
+Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a Linux server. Perfect for hosting personal Node stuff on a VPS. There are essentially two parts: 1. `git push` deploy (by using git hooks) and 2. process management (by using [pm2](https://github.com/Unitech/pm2))
 
 It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but you can use pod to run a [node-http-proxy](https://github.com/nodejitsu/node-http-proxy) server on port 80 that routes incoming requests to other apps.
 
@@ -18,7 +20,6 @@ It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but y
 
 ``` bash
 $ pod create myapp
-# will print path to repo and working tree
 ```
 
 **On your local machine:**
@@ -29,7 +30,7 @@ $ git clone ssh://your-server/pod_dir/myapp.git
 $ git push
 ```
 
-**Or use an existing local repo:**
+**Or, if you have an existing local repo:**
 
 ``` bash
 $ git remote add deploy ssh://your-server/pod_dir/myapp.git
@@ -124,3 +125,7 @@ Or, if you prefer to include the hook with the repo, just place a `.podhook` fil
 - the config is now a single json file `.podrc` instead of a folder. Also the config fields have changed a bit, see *Config* section below for details. You might need to manually migrate the old app configs over. After that you can delete the old `.podconfig`.
 
 - included unit tests for core functionalities (`npm test`)
+
+## License
+
+[MIT](http://opensource.org/licenses/MIT)
