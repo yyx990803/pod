@@ -84,7 +84,7 @@ describe('API', function () {
 
         it('should return error if app with that name already exists', function (done) {
             pod.createApp('test', function (err) {
-                assert.ok(err)
+                assert.ok(err && err.code === 'EXISTS')
                 done()
             })
         })
@@ -104,7 +104,7 @@ describe('API', function () {
 
         it('should get an error if cannot locate main script', function (done) {
             pod.startApp('test', function (err) {
-                assert.ok(/cannot locate main script/.test(err.toString()))
+                assert.ok(err && err.code === 'NO_SCRIPT', 'should get no script error')
                 done()
             })
         })
@@ -115,9 +115,10 @@ describe('API', function () {
             pod.startApp('test', done)
         })
 
-        it('should abort if app is already running', function (done) {
+        it('should give back message if app is already running', function (done) {
             pod.startApp('test', function (err, msg) {
-                assert.ok(/already\srunning/.test(msg), 'callback should receive right error')
+                assert.ok(!err, 'should get no error')
+                assert.ok(/already\srunning/.test(msg), 'should receive correct message')
                 done()
             })
         })
@@ -128,7 +129,7 @@ describe('API', function () {
 
         it('should return error if app does not exist', function (done) {
             pod.startApp('doesnotexist', function (err) {
-                assert.ok(/does not exist/.test(err.toString()))
+                assert.ok(err && err.code === 'NOT_FOUND')
                 done()
             })
         })
@@ -151,7 +152,7 @@ describe('API', function () {
 
         it('should return error if app does not exist', function (done) {
             pod.stopApp('doesnotexist', function (err) {
-                assert.ok(/does not exist/.test(err.toString()))
+                assert.ok(err && err.code === 'NOT_FOUND')
                 done()
             })
         })
@@ -246,14 +247,14 @@ describe('API', function () {
 
         it('should get an error trying to restart a non-running app', function (done) {
             pod.restartApp('test2', function (err) {
-                assert.ok(/is not running/.test(err.toString()))
+                assert.ok(err && err.code === 'NOT_RUNNING')
                 done()
             })
         })
 
         it('should return error if app does not exist', function (done) {
             pod.restartApp('doesnotexist', function (err) {
-                assert.ok(/does not exist/.test(err.toString()))
+                assert.ok(err && err.code === 'NOT_FOUND')
                 done()
             })
         })
@@ -312,7 +313,7 @@ describe('API', function () {
 
         it('should return error if app does not exist', function (done) {
             pod.removeApp('doesnotexist', function (err) {
-                assert.ok(/does not exist/.test(err.toString()))
+                assert.ok(err && err.code === 'NOT_FOUND')
                 done()
             })
         })
