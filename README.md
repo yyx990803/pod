@@ -1,6 +1,6 @@
 # POD - git push deploy for Node.js [![Build Status](https://travis-ci.org/yyx990803/pod.png?branch=master)](https://travis-ci.org/yyx990803/pod)
 
-![screenshot](http://i.imgur.com/7ZQwDMk.png)
+![screenshot](http://i.imgur.com/dMcKWiJ.png)
 
 Core API JSCoverage: **95.72%**
 
