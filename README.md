@@ -100,17 +100,41 @@ Example Config:
     "editor": "vi",
     "apps": {
         "example1": {
-            "nodeEnv": "production", // passed to the app as process.env.NODE_ENV
-            "port": 8080, // passed to the app as process.env.PORT
-            "instances": 2 // any valid pm2 config here gets passed to pm2
+
+            // passed to the app as process.env.NODE_ENV
+            // if not set, will inherit from global settings
+            "nodeEnv": "production",
+
+            // passed to the app as process.env.PORT
+            // if not set, pod will try to sniff from app's
+            // main file (for displaying only), but not
+            // guarunteed to be correct.
+            "port": 8080,
+
+            // *** any valid pm2 config here gets passed to pm2. ***
+
+            // spin up 2 instances using cluster module
+            "instances": 2
+
+            // pass in additional command line args to the app
             "args": "['--toto=heya coco', '-d', '1']",
-            "fileOutput": "/absolute/path/to/stdout.log", // will be in ~/.pm2/logs if not specified
-            "fileError": "/absolute/path/to/stderr.log", // same as above
-            "pidFile": "/absolute/path/to/example1.pid" // will be in ~/.pm2/pids if not specified
+
+            // file paths for stdout, stderr logs and pid.
+            // will be in ~/.pm2/ if not specified
+            "fileOutput": "/absolute/path/to/stdout.log",
+            "fileError": "/absolute/path/to/stderr.log",
+            "pidFile": "/absolute/path/to/example1.pid"
         },
         "example2": {
-            // if nothing is supplied, nodeEnv will inherit from global settings
-            // if port is not set here, pod will try to sniff port from app's main script.
+
+            // minimum uptime to be considered stable,
+            // in milliseconds. If not set, all restarts
+            // are considered unstable.
+            "minUptime": 3600000,
+
+            // max times of unstable restarts allowed
+            // before the app is auto stopped.
+            "maxRestarts": 10
         }
     }
 }
