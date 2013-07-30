@@ -37,7 +37,7 @@ $ git remote add deploy ssh://your-server/pod_dir/myapp.git
 $ git push deploy master
 ```
 
-That's it! App should be automatically running after the push. For later pushes, app process will be restarted.  
+That's it! App should be automatically running after the push. For later pushes, app process will be restarted.
 
 ## Installation
 
@@ -77,7 +77,7 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
     rm <app>                Delete an app
     start <app>             Start an app monitored by pm2
     stop <app>              Stop an app
-    restart <app>           Restart an app, start if not already running
+    restart <app>           Restart an app that's already running
     list                    List apps and status
     startall                Start all apps not already running
     stopall                 Stop all apps

@@ -7,7 +7,7 @@
     rm <app>                Delete an app
     start <app>             Start an app monitoed by pm2
     stop <app>              Stop an app
-    restart <app>           Restart an app, start if not already running
+    restart <app>           Restart an app that's already running
     list                    List apps and status
     startall                Start all apps not already running
     stopall                 Stop all apps
