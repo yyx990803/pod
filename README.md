@@ -164,6 +164,12 @@ if [[ $passed != 0 ]]; then
 fi
 ```
 
+## Using the API
+
+NOTE: the API can only be used after POD has been initiated via the command line.
+
+`require('pod')` will return the API, please refer to the source before further documentation can be completed.
+
 ## Important changes in 0.4.0
 
 - switched the underlying monitor library from forever to pm2. pm2 is included as a dependency so you can simply link its executable for logging and monitoring. (see below)
