@@ -46,7 +46,7 @@ mkdir `pwd`/temp
 
 echo "    First time use"
 
-echo -e "temp/files\ny" | POD_CONF=$conf $pod >/dev/null 2>$err
+POD_CONF=$conf ROOT_DIR=temp/files TEST=true $pod >/dev/null 2>$err
 spec "should initialize with no error"
 
 msg="should create config file with correct root path"
