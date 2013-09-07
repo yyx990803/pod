@@ -168,15 +168,7 @@ fi
 
 NOTE: the API can only be used after POD has been initiated via the command line.
 
-`require('pod')` will return the API, please refer to the source before further documentation can be completed.
-
-## Important changes in 0.4.0
-
-- switched the underlying monitor library from forever to pm2. pm2 is included as a dependency so you can simply link its executable for logging and monitoring. (see below)
-
-- the config is now a single json file `.podrc` instead of a folder. Also the config fields have changed a bit, see *Config* section below for details. You might need to manually migrate the old app configs over. After that you can delete the old `.podconfig`.
-
-- included unit tests for core functionalities (`npm test`)
+`require('pod')` will return the API. For now you'll have to refer to the source before further documentation becomes available.
 
 ## License
 
