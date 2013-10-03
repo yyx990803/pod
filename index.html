@@ -1,0 +1,217 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Pod by yyx990803</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Pod</h1>
+        <p>Git push deploy for Node.js</p>
+
+        <p class="view"><a href="https://github.com/yyx990803/pod">View the Project on GitHub <small>yyx990803/pod</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/yyx990803/pod/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/yyx990803/pod/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/yyx990803/pod">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="pod---git-push-deploy-for-nodejs-" class="anchor" href="#pod---git-push-deploy-for-nodejs-"><span class="octicon octicon-link"></span></a>POD - git push deploy for Node.js <a href="https://travis-ci.org/yyx990803/pod"><img src="https://travis-ci.org/yyx990803/pod.png?branch=master" alt="Build Status"></a>
+</h1>
+
+<p><img src="http://i.imgur.com/dMcKWiJ.png" alt="screenshot"></p>
+
+<p>Core API JSCoverage: <strong>95.72%</strong></p>
+
+<p>Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a Linux server. Perfect for hosting personal Node stuff on a VPS. There are essentially two parts: 1. <code>git push</code> deploy (by using git hooks) and 2. process management (by using <a href="https://github.com/Unitech/pm2">pm2</a>)</p>
+
+<p>It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but you can use pod to run a <a href="https://github.com/nodejitsu/node-http-proxy">node-http-proxy</a> server on port 80 that routes incoming requests to other apps.</p>
+
+<h2>
+<a name="prerequisites" class="anchor" href="#prerequisites"><span class="octicon octicon-link"></span></a>Prerequisites</h2>
+
+<ul>
+<li>Node &gt;= 0.8.x</li>
+<li>git</li>
+<li>properly set up ssh so you can push to a repo on the VPS via ssh</li>
+</ul><h2>
+<a name="example-workflow" class="anchor" href="#example-workflow"><span class="octicon octicon-link"></span></a>Example Workflow</h2>
+
+<p><strong>On the server:</strong></p>
+
+<div class="highlight highlight-bash"><pre><span class="nv">$ </span>pod create myapp
+</pre></div>
+
+<p><strong>On your local machine:</strong></p>
+
+<div class="highlight highlight-bash"><pre><span class="nv">$ </span>git clone ssh://your-server/pod_dir/myapp.git
+<span class="c"># hack hack hack, commit</span>
+<span class="nv">$ </span>git push
+</pre></div>
+
+<p><strong>Or, if you have an existing local repo:</strong></p>
+
+<div class="highlight highlight-bash"><pre><span class="nv">$ </span>git remote add deploy ssh://your-server/pod_dir/myapp.git
+<span class="nv">$ </span>git push deploy master
+</pre></div>
+
+<p>That's it! App should be automatically running after the push. For later pushes, app process will be restarted.</p>
+
+<h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<div class="highlight highlight-bash"><pre><span class="nv">$ </span><span class="o">[</span>sudo<span class="o">]</span> npm install -g pod
+</pre></div>
+
+<p>To make pod auto start all managed apps on system startup, you might also want to write a simple <a href="http://upstart.ubuntu.com">upstart</a> script that contains something like this:</p>
+
+<div class="highlight highlight-bash"><pre><span class="c"># /etc/init/pod.conf</span>
+start on startup
+<span class="nb">exec </span>sudo -u &lt;username&gt; /path/to/node /path/to/pod startall
+</pre></div>
+
+<p>The first time you run <code>pod</code> it will ask you where you want to put your stuff. The structure of the given directory will look like this:</p>
+
+<div class="highlight highlight-bash"><pre>.
+├── repos <span class="c"># holds the bare .git repos</span>
+│   └── example.git
+└── apps <span class="c"># holds the working copies</span>
+    └── example
+        ├──app.js
+        └──.podhook
+</pre></div>
+
+<h2>
+<a name="cli-usage" class="anchor" href="#cli-usage"><span class="octicon octicon-link"></span></a>CLI Usage</h2>
+
+<pre><code>
+  Usage: pod [command]
+
+  Commands:
+
+    create &lt;app&gt;            Create a new app
+    rm &lt;app&gt;                Delete an app
+    start &lt;app&gt;             Start an app monitored by pm2
+    stop &lt;app&gt;              Stop an app
+    restart &lt;app&gt;           Restart an app that's already running
+    list                    List apps and status
+    startall                Start all apps not already running
+    stopall                 Stop all apps
+    restartall              Restart all running apps
+    edit &lt;app&gt;              Edit the app's post-receive hook
+    config                  Edit config file
+    help                    You are reading it right now
+
+</code></pre>
+
+<h2>
+<a name="config" class="anchor" href="#config"><span class="octicon octicon-link"></span></a>Config</h2>
+
+<p>Example Config:</p>
+
+<div class="highlight highlight-js"><pre><span class="p">{</span>
+    <span class="s2">"root"</span><span class="o">:</span> <span class="s2">"/srv"</span><span class="p">,</span>
+    <span class="s2">"nodeEnv"</span><span class="o">:</span> <span class="s2">"development"</span><span class="p">,</span>
+    <span class="s2">"defaultScript"</span><span class="o">:</span> <span class="s2">"app.js"</span><span class="p">,</span> <span class="c1">// this can be overwritten in each app's package.json's "main" field</span>
+    <span class="s2">"editor"</span><span class="o">:</span> <span class="s2">"vi"</span><span class="p">,</span>
+    <span class="s2">"apps"</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">"example1"</span><span class="o">:</span> <span class="p">{</span>
+
+            <span class="c1">// passed to the app as process.env.NODE_ENV</span>
+            <span class="c1">// if not set, will inherit from global settings</span>
+            <span class="s2">"nodeEnv"</span><span class="o">:</span> <span class="s2">"production"</span><span class="p">,</span>
+
+            <span class="c1">// passed to the app as process.env.PORT</span>
+            <span class="c1">// if not set, pod will try to sniff from app's</span>
+            <span class="c1">// main file (for displaying only), but not</span>
+            <span class="c1">// guarunteed to be correct.</span>
+            <span class="s2">"port"</span><span class="o">:</span> <span class="mi">8080</span><span class="p">,</span>
+
+            <span class="c1">// *** any valid pm2 config here gets passed to pm2. ***</span>
+
+            <span class="c1">// spin up 2 instances using cluster module</span>
+            <span class="s2">"instances"</span><span class="o">:</span> <span class="mi">2</span>
+
+            <span class="c1">// pass in additional command line args to the app</span>
+            <span class="s2">"args"</span><span class="o">:</span> <span class="s2">"['--toto=heya coco', '-d', '1']"</span><span class="p">,</span>
+
+            <span class="c1">// file paths for stdout, stderr logs and pid.</span>
+            <span class="c1">// will be in ~/.pm2/ if not specified</span>
+            <span class="s2">"fileOutput"</span><span class="o">:</span> <span class="s2">"/absolute/path/to/stdout.log"</span><span class="p">,</span>
+            <span class="s2">"fileError"</span><span class="o">:</span> <span class="s2">"/absolute/path/to/stderr.log"</span><span class="p">,</span>
+            <span class="s2">"pidFile"</span><span class="o">:</span> <span class="s2">"/absolute/path/to/example1.pid"</span>
+        <span class="p">},</span>
+        <span class="s2">"example2"</span><span class="o">:</span> <span class="p">{</span>
+
+            <span class="c1">// minimum uptime to be considered stable,</span>
+            <span class="c1">// in milliseconds. If not set, all restarts</span>
+            <span class="c1">// are considered unstable.</span>
+            <span class="s2">"minUptime"</span><span class="o">:</span> <span class="mi">3600000</span><span class="p">,</span>
+
+            <span class="c1">// max times of unstable restarts allowed</span>
+            <span class="c1">// before the app is auto stopped.</span>
+            <span class="s2">"maxRestarts"</span><span class="o">:</span> <span class="mi">10</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<h2>
+<a name="logging--monitoring" class="anchor" href="#logging--monitoring"><span class="octicon octicon-link"></span></a>Logging &amp; Monitoring</h2>
+
+<p>Since pod uses pm2 under the hood, logging is delegated to <code>pm2</code>. It's recommended to link <code>path/to/pod/node_modules/pm2/bin/pm2</code> to your <code>/usr/local/bin</code> so that you can use <code>pm2 monit</code> and <code>pm2 logs</code> to analyze more detailed app info. Note that all pod commands only concerns apps present in pod's config file, so it's fine if you use pm2 separately to run additional processes.</p>
+
+<h2>
+<a name="custom-post-receive-hook" class="anchor" href="#custom-post-receive-hook"><span class="octicon octicon-link"></span></a>Custom post-receive hook</h2>
+
+<p>You can edit the post-receive script of an app using <code>pod edit &lt;appname&gt;</code> to customize the actions after a git push.</p>
+
+<p>Or, if you prefer to include the hook with the repo, just place a <code>.podhook</code> file in your app, which can contain shell scripts that will be executed after push, and before restarting the app. If <code>.podhook</code> exits with code other than 0, the app will not be restarted and will hard reset to the commit before the push.</p>
+
+<p>Example <code>.podhook</code>:</p>
+
+<div class="highlight highlight-bash"><pre>component install
+npm install
+grunt build
+grunt <span class="nb">test</span>
+<span class="nv">passed</span><span class="o">=</span><span class="nv">$?</span>
+<span class="k">if</span> <span class="o">[[</span> <span class="nv">$passed</span> !<span class="o">=</span> 0 <span class="o">]]</span>; <span class="k">then</span>
+    <span class="c"># test failed, exit. app's working tree on the server will be reset.</span>
+    <span class="nb">exit</span> <span class="nv">$passed</span>
+<span class="k">fi</span>
+</pre></div>
+
+<h2>
+<a name="using-the-api" class="anchor" href="#using-the-api"><span class="octicon octicon-link"></span></a>Using the API</h2>
+
+<p>NOTE: the API can only be used after POD has been initiated via the command line.</p>
+
+<p><code>require('pod')</code> will return the API. For now you'll have to refer to the source before further documentation becomes available.</p>
+
+<h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p><a href="http://opensource.org/licenses/MIT">MIT</a></p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/yyx990803">yyx990803</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
