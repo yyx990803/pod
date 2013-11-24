@@ -7,14 +7,14 @@
     "email": "yyx990803@gmail.com"
   },
   "dependencies": {
-    "pm2": "~0.5.4",
+    "pm2": "~0.6.7",
     "colors": "~0.6.0",
     "async": "~0.2.9",
     "mkdirp": "~0.3.5"
   },
   "devDependencies": {
-    "mocha": "~1.12.0",
-    "jscoverage": "~0.3.7"
+    "mocha": "~1.14.0",
+    "jscoverage": "~0.3.8"
   },
   "keywords": [
     "cli",
@@ -37,6 +37,8 @@
   "readme": "Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a single Linux server.",
   "readmeFilename": "README.md",
   "scripts": {
+    "api": "mocha test/api.js --reporter spec --slow 1250",
+    "cli": "bash test/cli.sh", 
     "test": "bash test/cli.sh && mocha test/api.js --reporter spec --slow 1250"
   }
 }
