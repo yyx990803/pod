@@ -385,6 +385,26 @@ describe('API', function () {
 
     })
 
+    describe('updateHooks()', function () {
+        
+        it('should update the hook to the current template', function (done) {
+            var app = pod.getAppInfo('test2'),
+                hookPath = app.repoPath + '/hooks/post-receive',
+                template = fs.readFileSync(__dirname + '/../hooks/post-receive', 'utf-8'),
+                expected = template
+                    .replace(/\{\{pod_dir\}\}/g, root)
+                    .replace(/\{\{app\}\}/g, app.name)
+            fs.writeFileSync(hookPath, '123', 'utf-8')
+            pod.updateHooks(function (err) {
+                assert.ok(!err)
+                var hook = fs.readFileSync(hookPath, 'utf-8')
+                assert.strictEqual(hook, expected)
+                done()
+            })
+        })
+
+    })
+
 })
 
 describe('git push', function () {
@@ -424,6 +444,53 @@ describe('git push', function () {
     it('should have executed the custom hook', function () {
         assert.ok(fs.existsSync(app.workPath + '/testfile'))
     })
+
+    it('should reset working tree if podhook exits with code other than 0', function (done) {
+        
+        var commit,
+            clonePath = root + '/clone',
+            cloneGit = 'git' +
+                ' --git-dir=' + clonePath + '/.git' +
+                ' --work-tree=' + clonePath
+
+        exec('cp -r ' + app.workPath + ' ' + clonePath, function (err) {
+            if (err) return done(err)
+            exec(git + ' log -1 | awk \'NR==1 {print $2}\'', function (err, cmt) {
+                if (err) return done(err)
+                commit = cmt
+                modifyHook()
+            })
+        })
+        
+        function modifyHook () {
+            // modify hook in a different copy of the repo
+            // and push it.
+            fs.writeFileSync(clonePath + '/.podhook', 'touch testfile2; exit 1')
+            exec(
+                cloneGit + ' add ' + clonePath + '; ' +
+                cloneGit + ' commit -m \'test2\'; ' +
+                cloneGit + ' push origin master',
+                function (err) {
+                    if (err) return done(err)
+                    checkCommit()
+                }
+            )
+        }
+
+        function checkCommit () {
+            exec(git + ' log -1 | awk \'NR==1 {print $2}\'', function (err, cmt) {
+                if (err) return done(err)
+                // make sure the hook is actually executed
+                assert.ok(fs.existsSync(app.workPath + '/testfile2'))
+                // the restart should have failed
+                // and the working copy should have been reverted
+                // to the old commit
+                assert.equal(cmt, commit)
+                done()
+            })
+        }
+
+    })
     
 })
 
@@ -432,7 +499,8 @@ describe('git push', function () {
 after(function (done) {
     pod.stopAllApps(function (err) {
         if (err) return done(err)
-        exec('rm -rf ' + temp, done)
+        //exec('rm -rf ' + temp, done)
+    done()
     })
 })
 
