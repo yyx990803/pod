@@ -3,7 +3,12 @@
 # update working tree
 cd {{pod_dir}}/apps/{{app}}
 unset GIT_DIR
-git pull
+# save last commit
+LAST_COMMIT=`git log -1 | awk 'NR==1 {print $2}'`
+# this is basiclly a force pull
+# so even if you force pushed this can still work
+git fetch --all
+git reset --hard origin/master
 
 # if has .podhook, execute that; otherwise default
 if [ -f .podhook ]; then
@@ -11,7 +16,7 @@ if [ -f .podhook ]; then
 	rc=$?
 	if [[ $rc != 0 ]]; then
 		echo "`tput setaf 1`ERROR: .podhook exited with code $rc, working tree is reverted.`tput sgr0`"
-		git reset `git reflog | awk 'NR==2 {print $1}'` --hard
+		git reset $LAST_COMMIT --hard
 		exit $rc
 	fi
 elif [ -f package.json ]; then
