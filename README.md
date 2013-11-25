@@ -172,6 +172,14 @@ NOTE: the API can only be used after POD has been initiated via the command line
 
 `require('pod')` will return the API. For now you'll have to refer to the source before further documentation becomes available.
 
+## Changelog
+
+### 0.6.0
+
+- The post receive hook now uses `git fetch --all` + `git reset --hard origin/master` instead of a pull. This allows users to do forced pushes that isn't necesarrily ahead of the working copy.
+- Added `pod prune` and `pod hooks` commands. Make sure to run `pod hooks` after upgrading pod, as you will want to update the hooks that are already created in your existing apps.
+- Upgraded to pm2 0.6.7
+
 ## License
 
 [MIT](http://opensource.org/licenses/MIT)
