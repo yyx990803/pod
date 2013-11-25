@@ -10,7 +10,7 @@ It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but y
 
 ## Prerequisites
 
-- Node >= 0.8.x
+- Node >= 0.10.x
 - git
 - properly set up ssh so you can push to a repo on the VPS via ssh
 

@@ -1,6 +1,6 @@
 {
   "name": "pod",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "preferGlobal": "true",
   "author": {
     "name": "Evan You",
