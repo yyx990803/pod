@@ -132,5 +132,19 @@ OUT=`POD_CONF=$conf $pod list 2>$err | wc -l`
 [ $OUT -eq 4 ] || fail "$msg"
 success "$msg"
 
+msg="prune"
+touch `pwd`/temp/files/prunefile
+mkdir `pwd`/temp/files/prunedir
+touch `pwd`/temp/files/apps/prunefile
+mkdir `pwd`/temp/files/apps/prunedir
+touch `pwd`/temp/files/repos/prunefile
+mkdir `pwd`/temp/files/repos/prunedir
+POD_CONF=$conf $pod prune >/dev/null 2>$err
+OUT=`find \`pwd\`/temp/files -name prunefile | wc -l`
+[ $OUT -eq 0 ] || fail "$msg"
+OUT=`find \`pwd\`/temp/files -name prunedir | wc -l`
+[ $OUT -eq 0 ] || fail "$msg"
+success "$msg"
+
 rm -rf `pwd`/temp
 echo

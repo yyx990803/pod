@@ -328,6 +328,47 @@ describe('API', function () {
 
     })
 
+    describe('prune()', function () {
+
+        var files = [
+            root + '/prunefile',
+            appsDir + '/prunefile',
+            reposDir + '/prunefile'
+        ]
+
+        var dirs = [
+            root + '/prunedir',
+            appsDir + '/prunedir',
+            reposDir + '/prunedir'
+        ]
+        
+        before(function () {
+            files.forEach(function (f) {
+                fs.writeFileSync(f)
+            })
+            dirs.forEach(function (d) {
+                fs.mkdirSync(d)
+            })
+        })
+
+        it('should remove all extraneous file and directories', function () {
+            pod.prune(function (err, msg) {
+                assert.ok(!err)
+                var fcount = msg.match(/prunefile/g).length,
+                    dcount = msg.match(/prunedir/g).length
+                assert.equal(fcount, 3)
+                assert.equal(dcount, 3)
+                files.forEach(function (f) {
+                    assert.ok(!fs.existsSync(f))
+                })
+                dirs.forEach(function (d) {
+                    assert.ok(!fs.existsSync(d))
+                })
+            })
+        })
+
+    })
+
 })
 
 describe('git push', function () {
