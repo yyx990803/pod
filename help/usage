@@ -14,4 +14,5 @@
     restartall              Restart all running apps
     edit <app>              Edit the app's post-receive hook
     config                  Edit config file
+    prune                   Clean up dead files
     help                    You are reading it right now

@@ -215,13 +215,17 @@ describe('API', function () {
         var appsResult
 
         before(function (done) {
-            pod.startApp('test', done)
+            pod.createApp('test3', function () {
+                exec('rm -rf ' + appsDir + '/test3', function () {
+                    pod.startApp('test', done)  
+                })
+            })
         })
         
         it('should provide a list of apps\' info', function (done) {
             pod.listApps(function (err, apps) {
                 if (err) return done(err)
-                assert.equal(apps.length, 2, 'should get two apps')
+                assert.equal(apps.length, 3, 'should get three apps')
                 appsResult = apps
                 done()
             })
@@ -236,6 +240,18 @@ describe('API', function () {
                     assert.ok(!app.instances, 'test2 should be off')
                 }
             })
+        })
+
+        it('should list broken apps', function () {
+            appsResult.forEach(function (app) {
+                if (app.name === 'test3') {
+                    assert.ok(app.broken)
+                }
+            })
+        })
+
+        after(function (done) {
+            pod.removeApp('test3', done)
         })
 
     })
