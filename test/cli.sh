@@ -115,7 +115,7 @@ success "$msg"
 msg="list"
 POD_CONF=$conf $pod start test >/dev/null 2>$err
 OUT=`POD_CONF=$conf $pod list 2>$err | wc -l`
-[ $OUT -eq 5 ] || fail "$msg"
+[ $OUT -eq 6 ] || fail "$msg"
 OUT=`POD_CONF=$conf $pod list 2>$err | grep ON | wc -l`
 [ $OUT -eq 1 ] || fail "$msg"
 OUT=`POD_CONF=$conf $pod list 2>$err | grep OFF | wc -l`
@@ -129,7 +129,7 @@ OUT=`ls -l \`pwd\`/temp/files/apps | grep test | wc -l`
 OUT=`ls -l \`pwd\`/temp/files/repos | grep test | wc -l`
 [ $OUT -eq 1 ] || fail "$msg"
 OUT=`POD_CONF=$conf $pod list 2>$err | wc -l`
-[ $OUT -eq 4 ] || fail "$msg"
+[ $OUT -eq 5 ] || fail "$msg"
 success "$msg"
 
 msg="prune"

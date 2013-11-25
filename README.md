@@ -2,7 +2,7 @@
 
 ![screenshot](http://i.imgur.com/dMcKWiJ.png)
 
-Core API JSCoverage: **96.61%**
+Core API JSCoverage: **96.69%**
 
 Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a Linux server. Perfect for hosting personal Node stuff on a VPS. There are essentially two parts: 1. `git push` deploy (by using git hooks) and 2. process management (by using [pm2](https://github.com/Unitech/pm2))
 

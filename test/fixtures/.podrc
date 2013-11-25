@@ -3,5 +3,7 @@
     "nodeEnv": "development",
     "defaultScript": "app.js",
     "editor": "vi",
-    "apps": {}
+    "apps": {},
+    "web": {},
+    "remotes": {}
 }

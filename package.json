@@ -10,7 +10,9 @@
     "pm2": "~0.6.7",
     "colors": "~0.6.0",
     "async": "~0.2.9",
-    "mkdirp": "~0.3.5"
+    "mkdirp": "~0.3.5",
+    "cli-table": "~0.2.0",
+    "express": "~3.4.4"
   },
   "devDependencies": {
     "mocha": "~1.14.0",
@@ -38,7 +40,7 @@
   "readmeFilename": "README.md",
   "scripts": {
     "api": "mocha test/api.js --reporter spec --slow 1250",
-    "cli": "bash test/cli.sh", 
+    "cli": "bash test/cli.sh",
     "test": "bash test/cli.sh && mocha test/api.js --reporter spec --slow 1250"
   }
 }
