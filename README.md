@@ -85,6 +85,7 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
     edit <app>              Edit the app's post-receive hook
     config                  Edit config file
     prune                   Clean up dead files
+    hooks                   Update hooks after a pod upgrade
     help                    You are reading it right now
 
 ```
