@@ -35,16 +35,16 @@ $ git push deploy master
 
 That's it! App should be automatically running after the push. For later pushes, app process will be restarted. There's more to it though, read on to find out more.
 
-[Prerequisites](#prerequisites)
-[Installation](#installation)
-[CLI Usage](#cli-usage)
-[Web Interface](#web-interface)
-[Using a Remote GitHub Repo](#using-a-remote-github-repo)
-[Configuration](#configuration)
-[Using PM2 Directly](#using-pm2-directly)
-[Custom Post-Receive Hook](#custom-post-receive-hook)
-[Using the API](#using-the-api)
-[Changelog](#changelog)
+[Prerequisites](#prerequisites)  
+[Installation](#installation)  
+[CLI Usage](#cli-usage)  
+[Web Interface](#web-interface)  
+[Using a Remote GitHub Repo](#using-a-remote-github-repo)  
+[Configuration](#configuration)  
+[Using PM2 Directly](#using-pm2-directly)  
+[Custom Post-Receive Hook](#custom-post-receive-hook)  
+[Using the API](#using-the-api)  
+[Changelog](#changelog)  
 
 ## Prerequisites
 
@@ -240,7 +240,7 @@ The API methods follow a conventional error-first callback style. Refer to the s
 
 ### 0.7.0
 
-- **breaking** Config file now conforms to underscore-style naming: `nodeEnv` is now `node_env`, and `defaultScript` is now `default_script`. Consult the [configuration](#configuration) section for more details.
+- <strong style="color:#F00">breaking</strong> Config file now conforms to underscore-style naming: `nodeEnv` is now `node_env`, and `defaultScript` is now `default_script`. Consult the [configuration](#configuration) section for more details.
 - Added `pod web` and `pod remote` commands. See [web interface](#web-interface) and [using a remote github repo](#using-a-remote-github-repo) for more details.
 - Removed `pod config` and `pod edit`.
 - Drop support for Node v0.8.
