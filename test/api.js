@@ -751,9 +751,9 @@ function expectWorkingPort (port, done, options) {
 function expectBadPort (port, done) {
     request({
         url: 'http://localhost:' + port,
-        timeout: 300
+        timeout: 500
     }, function (err, res, body) {
-        if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+        if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') {
             return done()
         }
         if (!err && body) {
