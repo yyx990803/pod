@@ -69,6 +69,8 @@ app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
 app.listen(process.env.PORT || 19999)
 
 function verify (req, app, payload) {
+    // not even a remote app
+    if (!app.remote) return
     // check repo match
     var repo = payload.repository
     console.log('\nreceived webhook request from: ' + repo.url)
