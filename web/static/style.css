@@ -1,0 +1,96 @@
+body {
+  padding: 30px 50px;
+  font: 14px "Monaco", Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: 1px;
+  line-height: 1em;
+  color: #555;
+}
+
+h1 {
+    font-weight: 300;
+    font-size: 24px;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.yes {
+    color: #6c0;
+}
+
+.no {
+    color: #f57;
+}
+
+h2 {
+    color: #FF3333;
+}
+
+.service {
+    display: inline-block;
+    width: 255px;
+}
+
+#apps {
+    list-style-type: none;
+    padding: 0;
+    line-height: 2em;
+}
+
+#apps li {
+    padding: 12px 20px;
+    border: 1px solid #ddd;
+    border-top: none;
+}
+
+#apps li:first-child {
+    border-top: 1px solid #ddd;
+}
+
+#apps span {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+#apps .indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 100%;
+    background-color: #ccc;
+    position: relative;
+    top: 1px;
+}
+
+#apps .status {
+    width: 25px;
+}
+
+#apps .indicator.ON {
+    background-color: #6c6;
+}
+#apps .indicator.BROKEN, #apps .indicator.ERROR {
+    background-color: #f00;
+}
+
+#apps .status.ON {
+    color: #6c6;
+}
+#apps .status.BROKEN, #apps .status.ERROR {
+    color: #f00;
+}
+
+#apps .port {
+    width: 100px;
+}
+
+#apps .name {
+    color: #00B7FF;
+    font-weight: bold;
+    text-transform: uppercase;
+    width: 120px;
+}

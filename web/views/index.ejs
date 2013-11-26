@@ -4,15 +4,17 @@
         <title>Pod Status</title>
         <meta charset="utf-8">
         <meta name="robots" content="noindex,nofollow">
+        <link rel="stylesheet" type="text/css" href="/style.css">
     </head>
     <body>
+        <h1>pod status</h1>
         <ul id="apps">
         <% apps.forEach(function (app) { %>
             <li>
-                <span class="status <%= app.instances ? 'on' : '' %>"></span>
                 <span class="name"><%= app.name %></span>
-                <span class="status"><%= app.status %></span>
-                <span class="port"><%= app.port %></span>
+                <span class="indicator <%= app.status %>"></span>
+                <span class="status <%= app.status %>"><%= app.status %></span>
+                <span class="port">:<%= app.port %></span>
                 <% if (app.instanceCount > 0) { %>
                     <span class="instances">instances: <%= app.instanceCount %></span> |
                     <span class="restarts">restarts: <span class="<%= app.restarts > 0 ? 'no' : 'yes' %>"><%= app.restarts %></span></span> |
