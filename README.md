@@ -10,13 +10,7 @@ Pod simplifies the workflow of setting up, updating and managing multiple Node.j
 
 It doesn't manage DNS routing for you (personally I'm doing that in Nginx) but you can use pod to run a [node-http-proxy](https://github.com/nodejitsu/node-http-proxy) server on port 80 that routes incoming requests to other apps.
 
-## Prerequisites
-
-- Node >= 0.10.x
-- git
-- properly set up ssh so you can push to a repo on the VPS via ssh
-
-## Example Workflow
+## A Quick Taste
 
 **On the server:**
 
@@ -32,14 +26,31 @@ $ git clone ssh://your-server/pod_dir/myapp.git
 $ git push
 ```
 
-**Or, if you have an existing local repo:**
+You can also just add it as a remote to an existing local repo:
 
 ``` bash
 $ git remote add deploy ssh://your-server/pod_dir/myapp.git
 $ git push deploy master
 ```
 
-That's it! App should be automatically running after the push. For later pushes, app process will be restarted.
+That's it! App should be automatically running after the push. For later pushes, app process will be restarted. There's more to it though, read on to find out more.
+
+[Prerequisites](#prerequisites)
+[Installation](#installation)
+[CLI Usage](#cli-usage)
+[Web Interface](#web-interface)
+[Using a Remote GitHub Repo](#using-a-remote-github-repo)
+[Configuration](#configuration)
+[Using PM2 Directly](#using-pm2-directly)
+[Custom Post-Receive Hook](#custom-post-receive-hook)
+[Using the API](#using-the-api)
+[Changelog](#changelog)
+
+## Prerequisites
+
+- Node >= 0.10.x
+- git
+- properly set up ssh so you can push to a repo on the VPS via ssh
 
 ## Installation
 
@@ -85,18 +96,25 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
     startall                Start all apps not already running
     stopall                 Stop all apps
     restartall              Restart all running apps
-    edit <app>              Edit the app's post-receive hook
-    config                  Edit config file
     prune                   Clean up dead files
     hooks                   Update hooks after a pod upgrade
-    web [stop|restart]      Start/stop/restart the web interface
+    web [command]           Start/stop/restart the web interface
     help                    You are reading it right now
 
 ```
 
 ## Web Interface
 
+``` bash
+$ pod web [stop|restart|status]
+```
 
+This command will start the pod web interface, by default at port 19999, which provides several functionalities:
+
+- `/` : a web page display current apps status.
+- `/json` : returns app status data in json format.
+- `/jsonp` : accepts jsonp, must be enabled in config.
+- `/hooks/appname` : trigger fetch/restart for corresponding remote apps.
 
 ## Using a remote GitHub repo
 
@@ -106,32 +124,37 @@ You can setup an app to track a remote GitHub repo by using the `pod remote` com
 $ pod remote my-remote-app username/repo
 ```
 
-After this you need to add a webhook to your GitHub repo pointing at your web interface's `/hooks/my-remote-app`.
+After this, add a webhook to your GitHub repo pointing at your web interface's `/hooks/my-remote-app`. The webhook will trigger a fetch and restart just like local apps. By default a remote app will be tracking the master branch only, if you want to track a different branch, you can change it in the config file.
 
-## Config
+## Configuration
+
+The config file lives at `~/.podrc`. Note since 0.7.0 all fields follow the underscore format so check your config file if things break after upgrading.
 
 Example Config:
 
 ``` js
 {
-    "root": "/srv",
-    "nodeEnv": "development",
-    "defaultScript": "app.js", // this can be overwritten in each app's package.json's "main" field
-    "editor": "vi",
+    "root": "/srv", // where pod puts all the stuff
+    "node_env": "development",
+    "default_script": "app.js", // this can be overwritten in each app's package.json's "main" field
+
+    // config for the web interface
     "web": {
         "username": "admin",
         "password": "1234",
-        "port": 19999
+        "port": 19999,
+        "jsonp": true // allow jsonp for web interface
     },
+
     "apps": {
         "example1": {
 
             // passed to the app as process.env.NODE_ENV
             // if not set, will inherit from global settings
-            "nodeEnv": "production",
+            "node_env": "production",
 
             // passed to the app as process.env.PORT
-            // if not set, pod will try to sniff from app's
+            // if not set, pod will try to parse from app's
             // main file (for displaying only), but not
             // guarunteed to be correct.
             "port": 8080,
@@ -139,45 +162,48 @@ Example Config:
             // *** any valid pm2 config here gets passed to pm2. ***
 
             // spin up 2 instances using cluster module
-            "instances": 2
+            "instances": 2,
 
             // pass in additional command line args to the app
             "args": "['--toto=heya coco', '-d', '1']",
 
             // file paths for stdout, stderr logs and pid.
             // will be in ~/.pm2/ if not specified
-            "fileOutput": "/absolute/path/to/stdout.log",
-            "fileError": "/absolute/path/to/stderr.log",
-            "pidFile": "/absolute/path/to/example1.pid"
+            "error_file": "/absolute/path/to/stdout.log",
+            "out_file": "/absolute/path/to/stderr.log"
         },
         "example2": {
 
             // minimum uptime to be considered stable,
             // in milliseconds. If not set, all restarts
             // are considered unstable.
-            "minUptime": 3600000,
+            "min_uptime": 3600000,
 
             // max times of unstable restarts allowed
             // before the app is auto stopped.
-            "maxRestarts": 10
+            "max_restarts": 10
         },
         "my-remote-app": {
-            "remote": "yyx990803/my-remote-app",
-            "branch": "master"
+            "remote": "yyx990803/my-remote-app", // github shorthand
+            "branch": "test" // if not specified, defaults to master
         }
     }
 }
 ```
 
-## Logging & Monitoring
+## Using PM2 Directly
 
-Since pod uses pm2 under the hood, logging is delegated to `pm2`. It's recommended to link `path/to/pod/node_modules/pm2/bin/pm2` to your `/usr/local/bin` so that you can use `pm2 monit` and `pm2 logs` to analyze more detailed app info. Note that all pod commands only concerns apps present in pod's config file, so it's fine if you use pm2 separately to run additional processes.
+Since pod uses pm2 under the hood, logging is delegated to `pm2`. If you didn't set an app's `out_file` and `error_file` options, logs will default to be saved at `~/.pm2/logs`.
 
-## Custom post-receive hook
+It's recommended to link `path/to/pod/node_modules/pm2/bin/pm2` to your `/usr/local/bin` so that you can use `pm2 monit` and `pm2 logs` for real-time monitoring.
 
-You can edit the post-receive script of an app using `pod edit <appname>` to customize the actions after a git push.
+If things go wrong and restarting is not fixing them, try `pm2 kill`. It terminates all pm2-managed processes and resets potential env variable problems.
 
-Or, if you prefer to include the hook with the repo, just place a `.podhook` file in your app, which can contain shell scripts that will be executed after push, and before restarting the app. If `.podhook` exits with code other than 0, the app will not be restarted and will hard reset to the commit before the push.
+All pod commands only concerns apps present in pod's config file, so it's fine if you use pm2 separately to run additional processes.
+
+## Custom Post-receive Hook
+
+To run additional shell script after a push and before the app is restarted, just include a `.podhook` file in your app. If `.podhook` exits with code other than 0, the app will not be restarted and will hard reset to the commit before the push.
 
 Example `.podhook`:
 
@@ -193,17 +219,31 @@ if [[ $passed != 0 ]]; then
 fi
 ```
 
+You can also directly edit the post-receive script of an app found in `pod-root-dir/repos/my-app.git/hooks/post-receive` if you wish.
+
 ## Using the API
 
-NOTE: the API can only be used after POD has been initiated via the command line.
+NOTE: the API can only be used after you've initiated the config file via command line.
 
-`require('pod')` will return the API. For now you'll have to refer to the source before further documentation becomes available.
+`require('pod')` will return the API. You have to wait till it's ready to do anything with it:
+
+``` js
+var pod = require('pod')
+pod.on('ready', function () {
+    // ... do stuff
+})
+```
+
+The API methods follow a conventional error-first callback style. Refer to the source for more details.
 
 ## Changelog
 
-### 0.6.1
+### 0.7.0
 
-- Added `pod web` and `pod remote` commands.
+- Added `pod web` and `pod remote` commands. See [web interface](#web-interface) and [using a remote github repo](#using-a-remote-github-repo) for more details.
+- Config file now conforms to underscore-style naming: `nodeEnv` is now `node_env`, and `defaultScript` is now `default_script`. Consult the [configuration](#configuration) section for more details.
+- Removed `pod config` and `pod edit`.
+- Drop support for Node v0.8.
 
 ### 0.6.0
 

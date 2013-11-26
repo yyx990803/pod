@@ -4,16 +4,16 @@
   Commands:
 
     create <app>            Create a new app
+    remote <app> <repo>     Create a app from a remote GitHub repo
     rm <app>                Delete an app
-    start <app>             Start an app monitoed by pm2
+    start <app>             Start an app monitored by pm2
     stop <app>              Stop an app
     restart <app>           Restart an app that's already running
     list                    List apps and status
     startall                Start all apps not already running
     stopall                 Stop all apps
     restartall              Restart all running apps
-    edit <app>              Edit the app's post-receive hook
-    config                  Edit config file
     prune                   Clean up dead files
     hooks                   Update hooks after a pod upgrade
+    web [command]           Start/stop/restart the web interface
     help                    You are reading it right now

@@ -1,8 +1,7 @@
 {
     "root": "{{root}}",
-    "nodeEnv": "development",
-    "defaultScript": "app.js",
-    "editor": "vi",
+    "node_env": "development",
+    "default_script": "app.js",
     "apps": {},
     "web": {},
     "remotes": {}

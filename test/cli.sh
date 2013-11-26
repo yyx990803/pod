@@ -46,7 +46,7 @@ mkdir `pwd`/temp
 
 echo "    First time use"
 
-POD_CONF=$conf ROOT_DIR=temp/files TEST=true $pod >/dev/null 2>$err
+POD_CONF=$conf POD_ROOT_DIR=temp/files TEST=true $pod >/dev/null 2>$err
 spec "should initialize with no error"
 
 msg="should create config file with correct root path"
@@ -99,37 +99,37 @@ cp `pwd`/test/fixtures/cliapp.js `pwd`/temp/files/apps/test2/app.js
 sed s/'"test2": {}'/'"test2": { "port": 19788 }'/ `pwd`/temp/conf/.podrc > `pwd`/temp/conf/replace
 cat `pwd`/temp/conf/replace > `pwd`/temp/conf/.podrc
 OUT=`POD_CONF=$conf $pod startall 2>$err | grep "test.*running" | wc -l`
-[ $OUT -eq 2 ] || fail "$msg"
+[ $OUT -eq 2 ] || fail "$msg : expect 2 running, got $OUT"
 success "$msg"
 
 msg="restartall"
 OUT=`POD_CONF=$conf $pod restartall 2>$err | grep "test.*restarted" | wc -l`
-[ $OUT -eq 2 ] || fail "$msg"
+[ $OUT -eq 2 ] || fail "$msg : expect 2 restarts, got $OUT"
 success "$msg"
 
 msg="stopall"
 OUT=`POD_CONF=$conf $pod stopall 2>$err | grep "test.*stopped" | wc -l`
-[ $OUT -eq 2 ] || fail "$msg"
+[ $OUT -eq 2 ] || fail "$msg : expect 2 stopped, got $OUT"
 success "$msg"
 
 msg="list"
 POD_CONF=$conf $pod start test >/dev/null 2>$err
 OUT=`POD_CONF=$conf $pod list 2>$err | wc -l`
-[ $OUT -eq 6 ] || fail "$msg"
+[ $OUT -eq 6 ] || fail "$msg : expect 6 lines, got $OUT"
 OUT=`POD_CONF=$conf $pod list 2>$err | grep ON | wc -l`
-[ $OUT -eq 1 ] || fail "$msg"
+[ $OUT -eq 1 ] || fail "$msg : expect 1 ON, got $OUT"
 OUT=`POD_CONF=$conf $pod list 2>$err | grep OFF | wc -l`
-[ $OUT -eq 1 ] || fail "$msg"
+[ $OUT -eq 1 ] || fail "$msg : expect 1 OFF, got $OUT"
 success "$msg"
 
 msg="rm"
 POD_CONF=$conf $pod rm -f test >/dev/null 2>$err
 OUT=`ls -l \`pwd\`/temp/files/apps | grep test | wc -l`
-[ $OUT -eq 1 ] || fail "$msg"
+[ $OUT -eq 1 ] || fail "$msg : expect 1 app left, got $OUT"
 OUT=`ls -l \`pwd\`/temp/files/repos | grep test | wc -l`
-[ $OUT -eq 1 ] || fail "$msg"
+[ $OUT -eq 1 ] || fail "$msg : expect 1 repo left, got $OUT"
 OUT=`POD_CONF=$conf $pod list 2>$err | wc -l`
-[ $OUT -eq 5 ] || fail "$msg"
+[ $OUT -eq 5 ] || fail "$msg : expect 5 lines from list, got $OUT"
 success "$msg"
 
 msg="prune"
@@ -141,10 +141,11 @@ touch `pwd`/temp/files/repos/prunefile
 mkdir `pwd`/temp/files/repos/prunedir
 POD_CONF=$conf $pod prune >/dev/null 2>$err
 OUT=`find \`pwd\`/temp/files -name prunefile | wc -l`
-[ $OUT -eq 0 ] || fail "$msg"
+[ $OUT -eq 0 ] || fail "$msg : prunefiles should be removed"
 OUT=`find \`pwd\`/temp/files -name prunedir | wc -l`
-[ $OUT -eq 0 ] || fail "$msg"
+[ $OUT -eq 0 ] || fail "$msg : prunedirs should be removed"
 success "$msg"
 
 rm -rf `pwd`/temp
+pm2 kill
 echo

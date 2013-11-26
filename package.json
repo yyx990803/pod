@@ -43,6 +43,6 @@
   "scripts": {
     "api": "mocha test/api.js --reporter spec --slow 1250",
     "cli": "bash test/cli.sh",
-    "test": "bash test/cli.sh && mocha test/api.js --reporter spec --slow 1250"
+    "test": "mocha test/api.js --reporter spec --slow 1250 && bash test/cli.sh"
   }
 }

@@ -499,8 +499,7 @@ describe('git push', function () {
 after(function (done) {
     pod.stopAllApps(function (err) {
         if (err) return done(err)
-        //exec('rm -rf ' + temp, done)
-    done()
+        exec('rm -rf ' + temp + '; pm2 kill', done)
     })
 })
 
