@@ -126,6 +126,8 @@ $ pod remote my-remote-app username/repo
 
 After this, add a webhook to your GitHub repo pointing at your web interface's `/hooks/my-remote-app`. The webhook will trigger a fetch and restart just like local apps. By default a remote app will be tracking the master branch only, if you want to track a different branch, you can change it in the config file.
 
+You can also set up a remote app to track an arbitrary git address. However in that case you need to manually make a POST request conforming to the [GitHub webhook payload](https://help.github.com/articles/post-receive-hooks).
+
 ## Configuration
 
 The config file lives at `~/.podrc`. Note since 0.7.0 all fields follow the underscore format so check your config file if things break after upgrading.
@@ -247,6 +249,10 @@ pod.on('ready', function () {
 The API methods follow a conventional error-first callback style. Refer to the source for more details.
 
 ## Changelog
+
+### 0.7.2
+
+- Add styling for the web interface.
 
 ### 0.7.1
 
