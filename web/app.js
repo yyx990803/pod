@@ -71,23 +71,32 @@ app.listen(process.env.PORT || 19999)
 function verify (req, app, payload) {
     // check repo match
     var repo = payload.repository
-    console.log('received webhook request from: ' + repo.url)
+    console.log('\nreceived webhook request from: ' + repo.url)
     if (strip(repo.url) !== strip(app.remote)) {
+        console.log('aborted.\n')
         return
     }
     // skip it with [pod skip] message
     var commit = payload.head_commit
     console.log('commit message: ' + commit.message)
-    if (/\[pod skip\]/.test(commit.message)) return
+    if (/\[pod skip\]/.test(commit.message)) {
+        console.log('aborted.\n')
+        return
+    }
     // check branch match
-    var branch = payload.ref.replace('refs/heads/', '')
-    console.log('expected branch: ' + (app.branch || 'master') + ', got branch: ' + branch)
-    if (app.branch && branch !== app.branch) return
+    var branch = payload.ref.replace('refs/heads/', ''),
+        expected = app.branch || 'master'
+    console.log('expected branch: ' + expected + ', got branch: ' + branch)
+    if (branch !== expected) {
+        console.log('aborted.\n')
+        return
+    }
     return true
 }
 
 function executeHook (appid, app, payload, cb) {
     fs.readFile(path.resolve(__dirname, '../hooks/post-receive'), 'utf-8', function (err, template) {
+        if (err) return cb(err)
         var hookPath = conf.root + '/temphook.sh',
             hook = template
                 .replace(/\{\{pod_dir\}\}/g, conf.root)
@@ -95,11 +104,14 @@ function executeHook (appid, app, payload, cb) {
         if (app.branch) {
             hook = hook.replace('origin/master', 'origin/' + app.branch)
         }
-        fs.writeFile(hookPath, hook, function () {
-            fs.chmod(hookPath, '0777', function () {
+        fs.writeFile(hookPath, hook, function (err) {
+            if (err) return cb(err)
+            fs.chmod(hookPath, '0777', function (err) {
+                if (err) return cb(err)
                 console.log('excuting github webhook for ' + appid + '...')
                 var child = spawn('bash', [hookPath])
                 child.stdout.pipe(process.stdout)
+                child.stderr.pipe(process.stderr)
                 child.on('exit', function (code) {
                     fs.unlink(hookPath, cb)
                 })
