@@ -1,10 +1,8 @@
 # POD - git push deploy for Node.js
 
-[![Build Status](https://travis-ci.org/yyx990803/pod.png?branch=master)](https://travis-ci.org/yyx990803/pod)
-
 ![screenshot](http://i.imgur.com/pda21KY.png)
 
-Core API JSCoverage: **97.58%**
+[![Build Status](https://travis-ci.org/yyx990803/pod.png?branch=master)](https://travis-ci.org/yyx990803/pod) Core API JSCoverage: **98.79%**
 
 Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a Linux server. Perfect for hosting personal Node stuff on a VPS. There are essentially two parts: 1. `git push` deploy (by using git hooks) and 2. process management (by using [pm2](https://github.com/Unitech/pm2))
 
@@ -35,16 +33,16 @@ $ git push deploy master
 
 That's it! App should be automatically running after the push. For later pushes, app process will be restarted. There's more to it though, read on to find out more.
 
-[Prerequisites](#prerequisites)  
-[Installation](#installation)  
-[CLI Usage](#cli-usage)  
-[Web Interface](#web-interface)  
-[Using a Remote GitHub Repo](#using-a-remote-github-repo)  
-[Configuration](#configuration)  
-[Using PM2 Directly](#using-pm2-directly)  
-[Custom Post-Receive Hook](#custom-post-receive-hook)  
-[Using the API](#using-the-api)  
-[Changelog](#changelog)  
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [CLI Usage](#cli-usage)
+- [Web Interface](#web-interface)
+- [Using a Remote GitHub Repo](#using-a-remote-github-repo)
+- [Configuration](#configuration)
+- [Using PM2 Directly](#using-pm2-directly)
+- [Custom Post-Receive Hook](#custom-post-receive-hook)
+- [Using the API](#using-the-api)
+- [Changelog](#changelog)
 
 ## Prerequisites
 
