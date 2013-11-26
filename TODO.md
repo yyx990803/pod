@@ -1,1 +1,0 @@
-- `pod list` should show apps that are broken (missing files)
