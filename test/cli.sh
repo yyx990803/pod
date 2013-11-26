@@ -147,5 +147,7 @@ OUT=`find \`pwd\`/temp/files -name prunedir | wc -l`
 success "$msg"
 
 rm -rf `pwd`/temp
+unset POD_CONF
+unset POD_ROOT_DIR
 pm2 kill
 echo

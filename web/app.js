@@ -75,14 +75,14 @@ function verify (req, app, payload) {
     var repo = payload.repository
     console.log('\nreceived webhook request from: ' + repo.url)
     if (strip(repo.url) !== strip(app.remote)) {
-        console.log('aborted.\n')
+        console.log('aborted.')
         return
     }
     // skip it with [pod skip] message
     var commit = payload.head_commit
     console.log('commit message: ' + commit.message)
     if (/\[pod skip\]/.test(commit.message)) {
-        console.log('aborted.\n')
+        console.log('aborted.')
         return
     }
     // check branch match
@@ -90,7 +90,7 @@ function verify (req, app, payload) {
         expected = app.branch || 'master'
     console.log('expected branch: ' + expected + ', got branch: ' + branch)
     if (branch !== expected) {
-        console.log('aborted.\n')
+        console.log('aborted.')
         return
     }
     return true

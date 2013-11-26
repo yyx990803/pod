@@ -4,7 +4,7 @@
 
 ![screenshot](http://i.imgur.com/pda21KY.png)
 
-Core API JSCoverage: **94.85%**
+Core API JSCoverage: **97.58%**
 
 Pod simplifies the workflow of setting up, updating and managing multiple Node.js apps on a Linux server. Perfect for hosting personal Node stuff on a VPS. There are essentially two parts: 1. `git push` deploy (by using git hooks) and 2. process management (by using [pm2](https://github.com/Unitech/pm2))
 
@@ -240,8 +240,8 @@ The API methods follow a conventional error-first callback style. Refer to the s
 
 ### 0.7.0
 
+- **breaking** Config file now conforms to underscore-style naming: `nodeEnv` is now `node_env`, and `defaultScript` is now `default_script`. Consult the [configuration](#configuration) section for more details.
 - Added `pod web` and `pod remote` commands. See [web interface](#web-interface) and [using a remote github repo](#using-a-remote-github-repo) for more details.
-- Config file now conforms to underscore-style naming: `nodeEnv` is now `node_env`, and `defaultScript` is now `default_script`. Consult the [configuration](#configuration) section for more details.
 - Removed `pod config` and `pod edit`.
 - Drop support for Node v0.8.
 

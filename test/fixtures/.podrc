@@ -1,8 +1,7 @@
 {
     "root": "{{root}}",
     "node_env": "development",
-    "default_script": "app.js",
+    "default_script": "not-gonna-work.js",
     "apps": {},
-    "web": {},
     "remotes": {}
 }

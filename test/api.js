@@ -1,9 +1,10 @@
-var assert = require('assert'),
-    fs     = require('fs'),
-    path   = require('path'),
-    http   = require('http'),
-    exec   = require('child_process').exec,
-    jsc    = require('jscoverage')
+var assert  = require('assert'),
+    fs      = require('fs'),
+    path    = require('path'),
+    http    = require('http'),
+    exec    = require('child_process').exec,
+    request = require('request'),
+    jsc     = require('jscoverage')
 
 jsc.enableCoverage(true)
 
@@ -52,6 +53,18 @@ function setup (done) {
 // tests ----------------------------------------------------------------------
 
 describe('API', function () {
+
+    describe('.reloadConfig', function () {
+        
+        it('should reload the conf', function () {
+            var modified = JSON.parse(fs.readFileSync(testConfPath, 'utf-8'))
+            modified.default_script = 'app.js'
+            fs.writeFileSync(testConfPath, JSON.stringify(modified))
+            var newConf = pod.reloadConfig()
+            assert.deepEqual(newConf, modified)
+        })
+
+    })
 
     describe('.createApp( appname, [options,] callback )', function () {
 
@@ -494,6 +507,206 @@ describe('git push', function () {
     
 })
 
+describe('web interface', function () {
+
+    var webInterfaceId = 'pod-web-interface'
+
+    it('should prevent user from deleting it', function (done) {
+        pod.removeApp(webInterfaceId, function (err) {
+            assert.equal(err.code, 'WEB')
+            done()
+        })
+    })
+        
+    it('should start with no problem', function (done) {
+        pod.startApp(webInterfaceId, function (err, msg) {
+            if (err) return done(err)
+            assert.ok(/pod-web-interface.*running.*19999/.test(msg))
+            done()
+        })
+    })
+
+    it('should require auth at / and /json', function (done) {
+        expectWorkingPort(19999, next, {
+            code: 401,
+            abort: true,
+            delay: 300
+        })
+
+        function next () {
+            expectWorkingPort(19999, done, {
+                path: '/json',
+                code: 401,
+                abort: true,
+                delay: 0
+            })
+        }
+    })
+
+    it('should return html at /', function (done) {
+        expectWorkingPort(19999, done, {
+            auth: 'admin:admin@',
+            delay: 0,
+            expect: function (res) {
+                assert.ok(/ul id="apps"/.test(res))
+                assert.ok(/test2/.test(res))
+            }
+        })
+    })
+
+    it('should return json at /json', function (done) {
+        expectWorkingPort(19999, done, {
+            path: '/json',
+            auth: 'admin:admin@',
+            delay: 0,
+            expect: function (res) {
+                var json
+                try {
+                    json = JSON.parse(res)
+                } catch (e) {
+                    done(e)
+                }
+                assert.equal(json.length, 1)
+                assert.equal(json[0].name, 'test2')
+            }
+        })
+    })
+
+})
+
+describe('remote app', function () {
+
+    var repoPath = temp + '/remote-test.git',
+        workPath = temp + '/remote-test',
+        appPath  = appsDir + '/remote-test',
+        port = testPort + 2,
+        git = 'git --git-dir=' + workPath + '/.git --work-tree=' + workPath
+
+    before(function (done) {
+        exec('git --git-dir=' + repoPath + ' --bare init', function () {
+            exec('git clone ' + repoPath + ' ' + workPath, function () {
+                fs.writeFileSync(workPath + '/app.js', stubScript.replace('{{port}}', port))
+                done()
+            })
+        })
+    })
+    
+    it('should create a remote app', function (done) {
+        pod.createApp('remote-test', {
+            remote: repoPath
+        }, function (err, msg) {
+            assert.ok(!err)
+            assert.equal(msg.length, 3)
+            assert.ok(/remote app/.test(msg[1]))
+            assert.ok(msg[2].indexOf(repoPath) > 0)
+            assert.ok(fs.existsSync(appPath))
+            exec(
+                git + ' add app.js; ' +
+                git + ' commit -m "test"; ' +
+                git + ' push origin master',
+                done
+            )
+        })
+    })
+
+    it('should refuse webhook if branch doesn\'t match', function (done) {
+        request({
+            url: 'http://localhost:19999/hooks/remote-test',
+            method: 'POST',
+            form: {
+                payload: JSON.stringify({
+                    ref: 'refs/heads/test',
+                    head_commit: {
+                        message: '123'
+                    },
+                    repository: {
+                        url: repoPath
+                    }
+                })
+            }
+        }, function (err) {
+            if (err) return done(err)
+            setTimeout(function () {
+                assert.ok(!fs.existsSync(appPath + '/app.js'))
+                done()
+            }, 300)
+        })
+    })
+
+    it('should refuse webhook if repo url doesn\'t match', function (done) {
+        request({
+            url: 'http://localhost:19999/hooks/remote-test',
+            method: 'POST',
+            form: {
+                payload: JSON.stringify({
+                    ref: 'refs/heads/master',
+                    head_commit: {
+                        message: '123'
+                    },
+                    repository: {
+                        url: 'lolwut'
+                    }
+                })
+            }
+        }, function (err) {
+            if (err) return done(err)
+            setTimeout(function () {
+                assert.ok(!fs.existsSync(appPath + '/app.js'))
+                done()
+            }, 300)
+        })
+    })
+
+    it('should skip if head commit message contains [pod skip]', function (done) {
+        request({
+            url: 'http://localhost:19999/hooks/remote-test',
+            method: 'POST',
+            form: {
+                payload: JSON.stringify({
+                    ref: 'refs/heads/master',
+                    head_commit: {
+                        message: '[pod skip]'
+                    },
+                    repository: {
+                        url: repoPath
+                    }
+                })
+            }
+        }, function (err) {
+            if (err) return done(err)
+            setTimeout(function () {
+                assert.ok(!fs.existsSync(appPath + '/app.js'))
+                done()
+            }, 300)
+        })
+    })
+
+    it('should fetch and run if all requirements are met', function (done) {
+        request({
+            url: 'http://localhost:19999/hooks/remote-test',
+            method: 'POST',
+            form: {
+                payload: JSON.stringify({
+                    ref: 'refs/heads/master',
+                    head_commit: {
+                        message: '123'
+                    },
+                    repository: {
+                        url: repoPath
+                    }
+                })
+            }
+        }, function (err) {
+            if (err) return done(err)
+            setTimeout(function () {
+                assert.ok(fs.existsSync(appPath + '/app.js'))
+                expectWorkingPort(port, done, { delay: 0 })
+            }, 300)
+        })
+    })
+
+})
+
 // clean up -------------------------------------------------------------------
 
 after(function (done) {
@@ -506,54 +719,52 @@ after(function (done) {
 // helpers --------------------------------------------------------------------
 
 function expectRestart (port, beforeRestartStamp, done) {
-    http.get('http://localhost:' + port, function (res) {
+    request('http://localhost:' + port, function (err, res, body) {
+        if (err) return done (err)
         assert.equal(res.statusCode, 200)
-        res.setEncoding('utf-8')
-        res.on('data', function (data) {
-            var restartStamp = data.match(/\((\d+)\)/)[1]
-            restartStamp = parseInt(restartStamp, 10)
-            assert.ok(restartStamp > beforeRestartStamp)
-            done()
-        })
+        var restartStamp = body.match(/\((\d+)\)/)[1]
+        restartStamp = parseInt(restartStamp, 10)
+        assert.ok(restartStamp > beforeRestartStamp)
+        done()
     })
 }
 
-function expectWorkingPort (port, done) {
+function expectWorkingPort (port, done, options) {
+    options = options || {}
     setTimeout(function () {
-        http.get('http://localhost:' + port, function (res) {
-            assert.equal(res.statusCode, 200)
-            res.setEncoding('utf-8')
-            res.on('data', function (data) {
-                assert.ok(/ok!/.test(data))
-                done()
-            })
+        request('http://' + (options.auth || '') + 'localhost:' + port + (options.path || ''), function (err, res, body) {
+            if (err) return done(err)
+            assert.equal(res.statusCode, options.code || 200)
+            if (options.abort) return done()
+            if (options.expect) {
+                options.expect(body)
+            } else {
+                assert.ok(/ok!/.test(body))
+            }
+            done()
         })
-    }, 100) // small interval to make sure it has finished
+    }, options.delay || 100) // small interval to make sure it has finished
 }
 
 function expectBadPort (port, done) {
-    var timeout = false,
-        refused = false
-    var req = http.get('http://localhost:' + port, function (res) {
-        res.on('data', function () {
-            if (!timeout) done(new Error('should not get data back'))
-        })
-    })
-    req.on('error', function (err) {
-        if (err.code === 'ECONNREFUSED') {
-            refused = true
-            done()
+    request({
+        url: 'http://localhost:' + port,
+        timeout: 300
+    }, function (err, res, body) {
+        if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+            return done()
         }
+        if (!err && body) {
+            return done(new Error('should not get data back'))
+        }
+        done(err)
     })
-    setTimeout(function () {
-        timeout = true
-        if (!refused) done()
-    }, 300)
 }
 
 // report coverage ------------------------------------------------------------
 
 process.on('exit', function () {
+    delete process.env.POD_CONF
     jsc.coverage()
     jsc.coverageDetail()
 })
