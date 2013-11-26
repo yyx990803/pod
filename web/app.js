@@ -71,16 +71,18 @@ app.listen(process.env.PORT || 19999)
 function verify (req, app, payload) {
     // check repo match
     var repo = payload.repository
+    console.log('received webhook request from: ' + repo.url)
     if (strip(repo.url) !== strip(app.remote)) {
-        console.log('webhook request with unmatching repo url')
         return
     }
-    // check branch match
-    var branch = payload.ref.replace('refs/heads/', '')
-    if (app.branch && branch !== app.branch) return
     // skip it with [pod skip] message
     var commit = payload.head_commit
+    console.log('commit message: ' + commit.message)
     if (/\[pod skip\]/.test(commit.message)) return
+    // check branch match
+    var branch = payload.ref.replace('refs/heads/', '')
+    console.log('expected branch: ' + (app.branch || 'master') + ', got branch: ' + branch)
+    if (app.branch && branch !== app.branch) return
     return true
 }
 
@@ -95,6 +97,7 @@ function executeHook (appid, app, payload, cb) {
         }
         fs.writeFile(hookPath, hook, function () {
             fs.chmod(hookPath, '0777', function () {
+                console.log('excuting github webhook for ' + appid + '...')
                 var child = spawn('bash', [hookPath])
                 child.stdout.pipe(process.stdout)
                 child.on('exit', function (code) {
