@@ -719,14 +719,16 @@ after(function (done) {
 // helpers --------------------------------------------------------------------
 
 function expectRestart (port, beforeRestartStamp, done) {
-    request('http://localhost:' + port, function (err, res, body) {
-        if (err) return done (err)
-        assert.equal(res.statusCode, 200)
-        var restartStamp = body.match(/\((\d+)\)/)[1]
-        restartStamp = parseInt(restartStamp, 10)
-        assert.ok(restartStamp > beforeRestartStamp)
-        done()
-    })
+    setTimeout(function () {
+        request('http://localhost:' + port, function (err, res, body) {
+            if (err) return done (err)
+            assert.equal(res.statusCode, 200)
+            var restartStamp = body.match(/\((\d+)\)/)[1]
+            restartStamp = parseInt(restartStamp, 10)
+            assert.ok(restartStamp > beforeRestartStamp)
+            done()
+        })
+    }, 300)
 }
 
 function expectWorkingPort (port, done, options) {
@@ -743,7 +745,7 @@ function expectWorkingPort (port, done, options) {
             }
             done()
         })
-    }, options.delay || 100) // small interval to make sure it has finished
+    }, options.delay || 300) // small interval to make sure it has finished
 }
 
 function expectBadPort (port, done) {
