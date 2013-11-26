@@ -76,6 +76,7 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
   Commands:
 
     create <app>            Create a new app
+    remote <app> <repo>     Create a app from a remote GitHub repo
     rm <app>                Delete an app
     start <app>             Start an app monitored by pm2
     stop <app>              Stop an app
@@ -88,9 +89,24 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
     config                  Edit config file
     prune                   Clean up dead files
     hooks                   Update hooks after a pod upgrade
+    web [stop|restart]      Start/stop/restart the web interface
     help                    You are reading it right now
 
 ```
+
+## Web Interface
+
+
+
+## Using a remote GitHub repo
+
+You can setup an app to track a remote GitHub repo by using the `pod remote` command:
+
+``` bash
+$ pod remote my-remote-app username/repo
+```
+
+After this you need to add a webhook to your GitHub repo pointing at your web interface's `/hooks/my-remote-app`.
 
 ## Config
 
@@ -102,6 +118,11 @@ Example Config:
     "nodeEnv": "development",
     "defaultScript": "app.js", // this can be overwritten in each app's package.json's "main" field
     "editor": "vi",
+    "web": {
+        "username": "admin",
+        "password": "1234",
+        "port": 19999
+    },
     "apps": {
         "example1": {
 
@@ -139,6 +160,10 @@ Example Config:
             // max times of unstable restarts allowed
             // before the app is auto stopped.
             "maxRestarts": 10
+        },
+        "my-remote-app": {
+            "remote": "yyx990803/my-remote-app",
+            "branch": "master"
         }
     }
 }
@@ -175,6 +200,10 @@ NOTE: the API can only be used after POD has been initiated via the command line
 `require('pod')` will return the API. For now you'll have to refer to the source before further documentation becomes available.
 
 ## Changelog
+
+### 0.6.1
+
+- Added `pod web` and `pod remote` commands.
 
 ### 0.6.0
 
