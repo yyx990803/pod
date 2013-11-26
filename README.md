@@ -134,16 +134,32 @@ Example Config:
 
 ``` js
 {
-    "root": "/srv", // where pod puts all the stuff
+    // where pod puts all the stuff
+    "root": "/srv",
+
+    // default env
     "node_env": "development",
-    "default_script": "app.js", // this can be overwritten in each app's package.json's "main" field
+
+    // this can be overwritten in each app's package.json's "main" field
+    "default_script": "app.js",
+
+    // minimum uptime to be considered stable,
+    // in milliseconds. If not set, all restarts
+    // are considered unstable.
+    "min_uptime": 3600000,
+
+    // max times of unstable restarts allowed
+    // before the app is auto stopped.
+    "max_restarts": 10
 
     // config for the web interface
     "web": {
+        // set these! default is admin/admin
         "username": "admin",
-        "password": "1234",
+        "password": "admin",
         "port": 19999,
-        "jsonp": true // allow jsonp for web interface
+        // allow jsonp for web interface, defaults to false
+        "jsonp": true
     },
 
     "apps": {
@@ -173,15 +189,9 @@ Example Config:
             "out_file": "/absolute/path/to/stderr.log"
         },
         "example2": {
-
-            // minimum uptime to be considered stable,
-            // in milliseconds. If not set, all restarts
-            // are considered unstable.
-            "min_uptime": 3600000,
-
-            // max times of unstable restarts allowed
-            // before the app is auto stopped.
-            "max_restarts": 10
+            // you can override global settings
+            "min_uptime": 1000,
+            "max_restarts": 200
         },
         "my-remote-app": {
             "remote": "yyx990803/my-remote-app", // github shorthand
@@ -240,7 +250,7 @@ The API methods follow a conventional error-first callback style. Refer to the s
 
 ### 0.7.0
 
-- <strong style="color:#F00">breaking</strong> Config file now conforms to underscore-style naming: `nodeEnv` is now `node_env`, and `defaultScript` is now `default_script`. Consult the [configuration](#configuration) section for more details.
+- **BREAKING CHANGE** Config file now conforms to underscore-style naming: `nodeEnv` is now `node_env`, and `defaultScript` is now `default_script`. Consult the [configuration](#configuration) section for more details.
 - Added `pod web` and `pod remote` commands. See [web interface](#web-interface) and [using a remote github repo](#using-a-remote-github-repo) for more details.
 - Removed `pod config` and `pod edit`.
 - Drop support for Node v0.8.
