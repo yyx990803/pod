@@ -248,9 +248,13 @@ The API methods follow a conventional error-first callback style. Refer to the s
 
 ## Changelog
 
+### 0.7.1
+
+- Now pod automatically converts outdated config files to 0.7.0 compatible format.
+
 ### 0.7.0
 
-- **BREAKING CHANGE** Config file now conforms to underscore-style naming: `nodeEnv` is now `node_env`, and `defaultScript` is now `default_script`. Consult the [configuration](#configuration) section for more details.
+- Config file now conforms to underscore-style naming: `nodeEnv` is now `node_env`, and `defaultScript` is now `default_script`. Consult the [configuration](#configuration) section for more details.
 - Added `pod web` and `pod remote` commands. See [web interface](#web-interface) and [using a remote github repo](#using-a-remote-github-repo) for more details.
 - Removed `pod config` and `pod edit`.
 - Drop support for Node v0.8.
