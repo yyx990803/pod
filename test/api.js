@@ -509,7 +509,7 @@ describe('git push', function () {
 
 describe('web interface', function () {
 
-    var webInterfaceId = 'pod-web-interface'
+    var webInterfaceId = 'pod-web-service'
 
     it('should prevent user from deleting it', function (done) {
         pod.removeApp(webInterfaceId, function (err) {
@@ -521,7 +521,7 @@ describe('web interface', function () {
     it('should start with no problem', function (done) {
         pod.startApp(webInterfaceId, function (err, msg) {
             if (err) return done(err)
-            assert.ok(/pod-web-interface.*running.*19999/.test(msg))
+            assert.ok(/pod-web-service.*running.*19999/.test(msg))
             done()
         })
     })

@@ -3,14 +3,23 @@ var http     = require('http'),
     path     = require('path'),
     spawn    = require('child_process').spawn,
     express  = require('express'),
-    confPath = require('../lib/conf').path,
-    conf     = JSON.parse(fs.readFileSync(confPath)),
     pod      = require('../lib/api'),
     app      = express()
 
-var username = conf.web.username || 'admin',
-    password = conf.web.password || 'admin',
-    auth     = express.basicAuth(username, password)
+// late def
+var conf
+
+// middlewares
+var reloadConf = function (req, res, next) {
+    conf = pod.reloadConfig()
+    next()
+}
+
+var auth = express.basicAuth(function (user, pass) {
+    var u = conf.web.username || 'admin',
+        p = conf.web.password || 'admin'
+    return user === u && pass === p
+})
 
 app.configure(function(){
     app.set('views', __dirname + '/views')
@@ -37,15 +46,6 @@ app.get('/json', auth, function (req, res) {
     })
 })
 
-if (conf.web.jsonp === true) {
-    app.get('/jsonp', function (req, res) {
-        pod.listApps(function (err, list) {
-            if (err) return res.end(err)
-            res.jsonp(list)
-        })
-    })
-}
-
 app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
     var appid = req.params.appid,
         payload = req.body.payload,
@@ -66,8 +66,23 @@ app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
     }
 })
 
-app.listen(process.env.PORT || 19999)
+// listen when API is ready
+pod.once('ready', function () {
+    // load config first
+    conf = pod.config
+    // conditional open up jsonp based on config
+    if (conf.web.jsonp === true) {
+        app.get('/jsonp', function (req, res) {
+            pod.listApps(function (err, list) {
+                if (err) return res.end(err)
+                res.jsonp(list)
+            })
+        })
+    }
+    app.listen(process.env.PORT || 19999)
+})
 
+// Helpers
 function verify (req, app, payload) {
     // not even a remote app
     if (!app.remote) return
@@ -120,15 +135,6 @@ function executeHook (appid, app, payload, cb) {
             })
         })
     })
-}
-
-function reloadConf (req, res, next) {
-    try {
-        conf = JSON.parse(fs.readFileSync(confPath))
-    } catch (e) {
-        console.error('config file seems to be broken!')
-    }
-    next()
 }
 
 function strip (url) {

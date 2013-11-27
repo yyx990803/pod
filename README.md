@@ -103,18 +103,20 @@ The first time you run `pod` it will ask you where you want to put your stuff. T
 
 ```
 
-## Web Interface
+## Web Service
 
 ``` bash
 $ pod web [stop|restart|status]
 ```
 
-This command will start the pod web interface, by default at port 19999, which provides several functionalities:
+This command will start the pod web service, by default at port 19999, which provides several functionalities:
 
-- `/` : a web page display current apps status.
+- `/` : a web interface that displays current apps status.
 - `/json` : returns app status data in json format.
-- `/jsonp` : accepts jsonp, must be enabled in config.
+- `/jsonp` : accepts jsonp. This route must be enabled in config.
 - `/hooks/appname` : trigger fetch/restart for corresponding remote apps.
+
+Both `/` and `/json` require a basic http authentication. Make sure to set the username and password in the config file.
 
 ## Using a remote GitHub repo
 
@@ -241,7 +243,7 @@ NOTE: the API can only be used after you've initiated the config file via comman
 
 ``` js
 var pod = require('pod')
-pod.on('ready', function () {
+pod.once('ready', function () {
     // ... do stuff
 })
 ```
