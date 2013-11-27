@@ -46,7 +46,7 @@ function setup (done) {
         fs.mkdirSync(temp)
         fs.writeFileSync(testConfPath, testConf.replace('{{root}}', root))
         pod = jsc.require(module, '../lib/api')
-        pod.on('ready', done)
+        pod.once('ready', done)
     })
 }
 

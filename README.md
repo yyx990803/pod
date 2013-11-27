@@ -257,6 +257,11 @@ The API methods follow a conventional error-first callback style. Refer to the s
 
 ## Changelog
 
+### 0.7.3
+
+- Add a bit more information for first time use
+- Renamed the web service process name to `pod-web-service` from `pod-web-interface`.
+
 ### 0.7.2
 
 - Add styling for the web interface.
