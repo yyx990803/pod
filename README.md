@@ -23,6 +23,8 @@ $ pod create myapp
 ``` bash
 $ git clone ssh://your-server/pod_dir/myapp.git
 # hack hack hack, commit
+# make sure your main file is app.js
+# or specify "main" in package.json
 $ git push
 ```
 
@@ -35,6 +37,7 @@ $ git push deploy master
 
 That's it! App should be automatically running after the push. For later pushes, app process will be restarted. There's more to it though, read on to find out more.
 
+- [First Time Walkthrough](https://github.com/yyx990803/pod/wiki/Using-a-remote-repo)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [CLI Usage](#cli-usage)
@@ -119,6 +122,8 @@ This command will start the pod web service, by default at port 19999, which pro
 Both `/` and `/json` require a basic http authentication. Make sure to set the username and password in the config file.
 
 ## Using a remote GitHub repo
+
+[Walkthrough](https://github.com/yyx990803/pod/wiki/Using-a-remote-repo)
 
 You can setup an app to track a remote GitHub repo by using the `pod remote` command:
 
