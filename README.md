@@ -261,6 +261,7 @@ The API methods follow a conventional error-first callback style. Refer to the s
 
 - Add a bit more information for first time use
 - Renamed the web service process name to `pod-web-service` from `pod-web-interface`.
+- Fixed web service not refreshing config on each request
 
 ### 0.7.2
 
