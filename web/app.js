@@ -6,7 +6,7 @@ var http     = require('http'),
     pod      = require('../lib/api'),
     app      = express()
 
-// late def
+// late def, wait until pod is ready
 var conf
 
 // middlewares
@@ -69,7 +69,7 @@ app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
 // listen when API is ready
 pod.once('ready', function () {
     // load config first
-    conf = pod.config
+    conf = pod.getConfig()
     // conditional open up jsonp based on config
     if (conf.web.jsonp === true) {
         app.get('/jsonp', function (req, res) {
