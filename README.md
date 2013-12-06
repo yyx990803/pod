@@ -37,7 +37,7 @@ $ git push deploy master
 
 That's it! App should be automatically running after the push. For later pushes, app process will be restarted. There's more to it though, read on to find out more.
 
-- [First Time Walkthrough](https://github.com/yyx990803/pod/wiki/Using-a-remote-repo)
+- [First Time Walkthrough](https://github.com/yyx990803/pod/wiki/Setup-Walkthrough)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [CLI Usage](#cli-usage)
