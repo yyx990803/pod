@@ -222,7 +222,7 @@ All pod commands only concerns apps present in pod's config file, so it's fine i
 
 ## Custom Post-receive Hook
 
-To run additional shell script after a push and before the app is restarted, just include a `.podhook` file in your app. If `.podhook` exits with code other than 0, the app will not be restarted and will hard reset to the commit before the push.
+By default pod will run `npm install` for you everytime you push to the repo. To override this behavior and run custom shell script before restarting the app, just include a `.podhook` file in your app. If `.podhook` exits with code other than 0, the app will not be restarted and will hard reset to the commit before the push.
 
 Example `.podhook`:
 
@@ -236,6 +236,7 @@ if [[ $passed != 0 ]]; then
     # test failed, exit. app's working tree on the server will be reset.
     exit $passed
 fi
+# restart is automatic so no need to include that here
 ```
 
 You can also directly edit the post-receive script of an app found in `pod-root-dir/repos/my-app.git/hooks/post-receive` if you wish.
