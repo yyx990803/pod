@@ -138,5 +138,5 @@ function executeHook (appid, app, payload, cb) {
 }
 
 function strip (url) {
-    return url.replace(/(https?:\/\/|git@)github\.com(\/|:)|\.git/g, '')
+    return url.replace(/^(https?:\/\/|git@)github\.com(\/|:)|\.git$/g, '')
 }
