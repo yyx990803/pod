@@ -258,6 +258,11 @@ The API methods follow a conventional error-first callback style. Refer to the s
 
 ## Changelog
 
+### 0.7.4
+
+- Fix web service `strip()` function so it processes github ssh urls correctly. (Thanks to @mathisonian)
+- Behavior regarding `main` field in `package.json` is now more npm compliant. (e.g. it now allows omitting file extensions)
+
 ### 0.7.3
 
 - Add a bit more information for first time use
