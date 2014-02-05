@@ -1,13 +1,13 @@
 {
   "name": "pod",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "preferGlobal": "true",
   "author": {
     "name": "Evan You",
     "email": "yyx990803@gmail.com"
   },
   "dependencies": {
-    "pm2": "~0.7.1",
+    "pm2": "~0.7.7",
     "colors": "~0.6.0",
     "async": "~0.2.9",
     "mkdirp": "~0.3.5",
