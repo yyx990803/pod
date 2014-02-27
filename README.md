@@ -65,7 +65,7 @@ To make pod auto start all managed apps on system startup, you might also want t
 
 ``` bash
 # /etc/init/pod.conf
-start on startup
+start on (local-filesystems and net-device-up IFACE!=lo)
 exec sudo -u <username> /path/to/node /path/to/pod startall
 ```
 
