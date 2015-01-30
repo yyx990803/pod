@@ -614,15 +614,13 @@ describe('remote app', function () {
             url: 'http://localhost:19999/hooks/remote-test',
             method: 'POST',
             form: {
-                payload: JSON.stringify({
-                    ref: 'refs/heads/test',
-                    head_commit: {
-                        message: '123'
-                    },
-                    repository: {
-                        url: repoPath
-                    }
-                })
+                ref: 'refs/heads/test',
+                head_commit: {
+                    message: '123'
+                },
+                repository: {
+                    url: repoPath
+                }
             }
         }, function (err) {
             if (err) return done(err)
@@ -638,15 +636,13 @@ describe('remote app', function () {
             url: 'http://localhost:19999/hooks/remote-test',
             method: 'POST',
             form: {
-                payload: JSON.stringify({
-                    ref: 'refs/heads/master',
-                    head_commit: {
-                        message: '123'
-                    },
-                    repository: {
-                        url: 'lolwut'
-                    }
-                })
+                ref: 'refs/heads/master',
+                head_commit: {
+                    message: '123'
+                },
+                repository: {
+                    url: 'lolwut'
+                }
             }
         }, function (err) {
             if (err) return done(err)
@@ -662,15 +658,13 @@ describe('remote app', function () {
             url: 'http://localhost:19999/hooks/remote-test',
             method: 'POST',
             form: {
-                payload: JSON.stringify({
-                    ref: 'refs/heads/master',
-                    head_commit: {
-                        message: '[pod skip]'
-                    },
-                    repository: {
-                        url: repoPath
-                    }
-                })
+                ref: 'refs/heads/master',
+                head_commit: {
+                    message: '[pod skip]'
+                },
+                repository: {
+                    url: repoPath
+                }
             }
         }, function (err) {
             if (err) return done(err)
@@ -686,15 +680,13 @@ describe('remote app', function () {
             url: 'http://localhost:19999/hooks/remote-test',
             method: 'POST',
             form: {
-                payload: JSON.stringify({
-                    ref: 'refs/heads/master',
-                    head_commit: {
-                        message: '123'
-                    },
-                    repository: {
-                        url: repoPath
-                    }
-                })
+                ref: 'refs/heads/master',
+                head_commit: {
+                    message: '123'
+                },
+                repository: {
+                    url: repoPath
+                }
             }
         }, function (err) {
             if (err) return done(err)

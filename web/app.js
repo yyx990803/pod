@@ -48,7 +48,7 @@ app.get('/json', auth, function (req, res) {
 
 app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
     var appid = req.params.appid,
-        payload = req.body.payload,
+        payload = JSON.stringify(req.body),
         app = conf.apps[appid]
 
     try {
