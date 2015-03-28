@@ -16,6 +16,9 @@ var temp         = path.resolve(__dirname, '../temp'),
     testPort     = process.env.PORT || 18080
     
 process.env.POD_CONF = testConfPath
+process.on('exit', function () {
+    delete process.env.POD_CONF
+})
 
 var pod
 
@@ -25,8 +28,8 @@ before(function (done) {
     if (process.platform === 'darwin') {
         // kill the pm2 daemon first.
         // the daemon would malfunction if the Mac went to sleep mode.
-        exec('killall "pm2: Satan Daemonizer"', function (err) {
-            if (!err || err.toString().match(/No matching processes/)) {
+        exec('./node_modules/pm2/bin/pm2 kill', function (err) {
+            if (!err) {
                 setup(done)
             } else {
                 done(err)
@@ -751,9 +754,3 @@ function expectBadPort (port, done) {
         done(err)
     })
 }
-
-// report coverage ------------------------------------------------------------
-
-process.on('exit', function () {
-    delete process.env.POD_CONF
-})
