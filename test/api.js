@@ -3,10 +3,7 @@ var assert  = require('assert'),
     path    = require('path'),
     http    = require('http'),
     exec    = require('child_process').exec,
-    request = require('request'),
-    jsc     = require('jscoverage')
-
-jsc.enableCoverage(true)
+    request = require('request')
 
 var temp         = path.resolve(__dirname, '../temp'),
     root         = temp + '/root',
@@ -45,7 +42,7 @@ function setup (done) {
         if (err) return done(err)
         fs.mkdirSync(temp)
         fs.writeFileSync(testConfPath, testConf.replace('{{root}}', root))
-        pod = jsc.require(module, '../lib/api')
+        pod = require('../lib/api')
         pod.once('ready', done)
     })
 }
@@ -759,6 +756,4 @@ function expectBadPort (port, done) {
 
 process.on('exit', function () {
     delete process.env.POD_CONF
-    jsc.coverage()
-    jsc.coverageDetail()
 })

@@ -1,24 +1,24 @@
 {
   "name": "pod",
-  "version": "0.7.7",
+  "version": "0.7.8",
   "preferGlobal": "true",
   "author": {
     "name": "Evan You",
     "email": "yyx990803@gmail.com"
   },
   "dependencies": {
-    "pm2": "~0.7.7",
+    "pm2": "~0.10.8",
     "colors": "~0.6.0",
-    "async": "~0.2.9",
-    "mkdirp": "~0.3.5",
-    "cli-table": "~0.2.0",
+    "async": "~0.9.0",
+    "mkdirp": "~0.5.0",
+    "cli-table": "~0.3.1",
     "express": "~3.4.4",
-    "ejs": "~0.8.5"
+    "ejs": "~2.3.1"
   },
   "devDependencies": {
-    "mocha": "~1.14.0",
-    "jscoverage": "~0.3.8",
-    "request": "2.27.0"
+    "mocha": "2.2.1",
+    "jscoverage": "0.5.9",
+    "request": "2.54.0"
   },
   "keywords": [
     "cli",
@@ -43,6 +43,6 @@
   "scripts": {
     "api": "mocha test/api.js --reporter spec --slow 1250",
     "cli": "bash test/cli.sh",
-    "test": "mocha test/api.js --reporter spec --slow 1250 && bash test/cli.sh"
+    "test": "mocha test/api.js -r jscoverage -R spec --slow 1250 && bash test/cli.sh"
   }
 }
