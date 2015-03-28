@@ -31,7 +31,8 @@
     "url": "http://github.com/yyx990803/pod.git"
   },
   "bin": {
-    "pod": "./bin/pod"
+    "pod": "./bin/pod",
+    "pm2": "./node_modules/pm2/bin/pm2"
   },
   "engines": {
     "node": ">= 0.8.x"
