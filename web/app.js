@@ -94,7 +94,9 @@ function verify (req, app, payload) {
         return
     }
     // skip it with [pod skip] message
-    var commit = payload.head_commit
+    // use gitlab's payload structure if detected
+    var commit = payload.head_commit ? payload.head_commit : 
+        payload.commits[payload.commits.length - 1];
     console.log('commit message: ' + commit.message)
     if (/\[pod skip\]/.test(commit.message)) {
         console.log('aborted.')
