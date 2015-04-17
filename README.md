@@ -135,6 +135,8 @@ After this, add a webhook to your GitHub repo pointing at your web interface's `
 
 You can also set up a remote app to track an arbitrary git address. However in that case you need to manually make a POST request conforming to the [GitHub webhook payload](https://help.github.com/articles/post-receive-hooks).
 
+Starting in 0.8.2, GitLab webhooks are also supported.
+
 ## Configuration
 
 The config file lives at `~/.podrc`. Note since 0.7.0 all fields follow the underscore format so check your config file if things break after upgrading.
