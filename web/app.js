@@ -58,8 +58,9 @@ app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
     }
 
     if (app && verify(req, app, payload)) {
-        executeHook(appid, app, payload)
-        res.end()
+        executeHook(appid, app, payload, function () {
+            res.end()
+        })
     } else {
         res.end()
     }
@@ -112,9 +113,21 @@ function verify (req, app, payload) {
     return true
 }
 
-function executeHook (appid, app, payload) {
+function executeHook (appid, app, payload, cb) {
+
+    // set a response timeout to avoid GitHub webhooks
+    // hanging up due to long build times
+    var responded = false
+    function respond () {
+        if (!responded) {
+            responded = true
+            cb()
+        }
+    }
+    setTimeout(respond, 3000)
+
     fs.readFile(path.resolve(__dirname, '../hooks/post-receive'), 'utf-8', function (err, template) {
-        if (err) return cb(err)
+        if (err) return console.error(err)
         var hookPath = conf.root + '/temphook.sh',
             hook = template
                 .replace(/\{\{pod_dir\}\}/g, conf.root)
@@ -131,9 +144,7 @@ function executeHook (appid, app, payload) {
                 child.stdout.pipe(process.stdout)
                 child.stderr.pipe(process.stderr)
                 child.on('exit', function (code) {
-                    fs.unlink(hookPath, function () {
-                      console.log('done.')
-                    })
+                    fs.unlink(hookPath, respond)
                 })
             })
         })
