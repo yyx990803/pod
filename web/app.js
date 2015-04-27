@@ -118,16 +118,16 @@ function executeHook (appid, app, payload, cb) {
     // set a response timeout to avoid GitHub webhooks
     // hanging up due to long build times
     var responded = false
-    function respond () {
+    function respond (err) {
         if (!responded) {
             responded = true
-            cb()
+            cb(err)
         }
     }
     setTimeout(respond, 3000)
 
     fs.readFile(path.resolve(__dirname, '../hooks/post-receive'), 'utf-8', function (err, template) {
-        if (err) return console.error(err)
+        if (err) return respond(err)
         var hookPath = conf.root + '/temphook.sh',
             hook = template
                 .replace(/\{\{pod_dir\}\}/g, conf.root)
@@ -136,9 +136,9 @@ function executeHook (appid, app, payload, cb) {
             hook = hook.replace('origin/master', 'origin/' + app.branch)
         }
         fs.writeFile(hookPath, hook, function (err) {
-            if (err) return console.error(err)
+            if (err) return respond(err)
             fs.chmod(hookPath, '0777', function (err) {
-                if (err) return console.error(err)
+                if (err) return respond(err)
                 console.log('excuting github webhook for ' + appid + '...')
                 var child = spawn('bash', [hookPath])
                 child.stdout.pipe(process.stdout)

@@ -45,6 +45,6 @@
   "scripts": {
     "api": "mocha test/api.js --reporter spec --slow 1250",
     "cli": "bash test/cli.sh",
-    "test": "mocha test/api.js -r jscoverage -R spec --slow 1250 && bash test/cli.sh"
+    "test": "mocha test/api.js -r jscoverage -R spec --slow 1250 --timeout 5000 && bash test/cli.sh"
   }
 }
