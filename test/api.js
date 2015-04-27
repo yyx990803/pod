@@ -692,7 +692,7 @@ describe('remote app', function () {
             if (err) return done(err)
             setTimeout(function () {
                 assert.ok(fs.existsSync(appPath + '/app.js'))
-                expectWorkingPort(port, done, { delay: 0 })
+                expectWorkingPort(port, done, { delay: 1000 })
             }, 300)
         })
     })
