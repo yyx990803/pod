@@ -58,9 +58,8 @@ app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
     }
 
     if (app && verify(req, app, payload)) {
-        executeHook(appid, app, payload, function () {
-            res.end()
-        })
+        executeHook(appid, app, payload)
+        res.end()
     } else {
         res.end()
     }
@@ -113,7 +112,7 @@ function verify (req, app, payload) {
     return true
 }
 
-function executeHook (appid, app, payload, cb) {
+function executeHook (appid, app, payload) {
     fs.readFile(path.resolve(__dirname, '../hooks/post-receive'), 'utf-8', function (err, template) {
         if (err) return cb(err)
         var hookPath = conf.root + '/temphook.sh',
@@ -124,15 +123,17 @@ function executeHook (appid, app, payload, cb) {
             hook = hook.replace('origin/master', 'origin/' + app.branch)
         }
         fs.writeFile(hookPath, hook, function (err) {
-            if (err) return cb(err)
+            if (err) return console.error(err)
             fs.chmod(hookPath, '0777', function (err) {
-                if (err) return cb(err)
+                if (err) return console.error(err)
                 console.log('excuting github webhook for ' + appid + '...')
                 var child = spawn('bash', [hookPath])
                 child.stdout.pipe(process.stdout)
                 child.stderr.pipe(process.stderr)
                 child.on('exit', function (code) {
-                    fs.unlink(hookPath, cb)
+                    fs.unlink(hookPath, function () {
+                      console.log('done.')
+                    })
                 })
             })
         })
