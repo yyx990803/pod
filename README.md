@@ -214,9 +214,9 @@ Example Config:
 
 ## Using PM2 Directly
 
-Since pod uses pm2 under the hood, logging is delegated to `pm2`. If you didn't set an app's `out_file` and `error_file` options, logs will default to be saved at `~/.pm2/logs`.
+Pod relies on pm2 for process management under the hood. When installing pod, the `pm2` executable will also be linked globally. You can invoke `pm2` commands for more detailed process information.
 
-It's recommended to link `path/to/pod/node_modules/pm2/bin/pm2` to your `/usr/local/bin` so that you can use `pm2 monit` and `pm2 logs` for real-time monitoring.
+Logging is delegated to `pm2`. If you didn't set an app's `out_file` and `error_file` options, logs will default to be saved at `~/.pm2/logs`.
 
 If things go wrong and restarting is not fixing them, try `pm2 kill`. It terminates all pm2-managed processes and resets potential env variable problems.
 
