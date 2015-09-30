@@ -263,7 +263,7 @@ The API methods follow a conventional error-first callback style. Refer to the s
 ### 0.8.0
 
 - Upgrade pm2 to 0.12.9, which should make pod now work properly with Node 0.11/0.12 and latest stable iojs.
-- Fix web services to accomodate github webhook format change (#29)
+- Fix web services to accommodate github webhook format change (#29)
 - Now links the pm2 executable automatically when installed
 
 ### 0.7.4
