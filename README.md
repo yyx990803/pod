@@ -196,8 +196,8 @@ Example Config:
 
             // file paths for stdout, stderr logs and pid.
             // will be in ~/.pm2/ if not specified
-            "error_file": "/absolute/path/to/stdout.log",
-            "out_file": "/absolute/path/to/stderr.log"
+            "error_file": "/absolute/path/to/stderr.log",
+            "out_file": "/absolute/path/to/stdout.log"
         },
         "example2": {
             // you can override global settings
