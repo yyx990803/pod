@@ -4,6 +4,7 @@ var http     = require('http'),
     spawn    = require('child_process').spawn,
     express  = require('express'),
     pod      = require('../lib/api'),
+    ghURL    = require('parse-github-url'),
     app      = express()
 
 // late def, wait until pod is ready
@@ -89,7 +90,7 @@ function verify (req, app, payload) {
     // check repo match
     var repo = payload.repository
     console.log('\nreceived webhook request from: ' + repo.url)
-    if (strip(repo.url) !== strip(app.remote)) {
+    if (ghURL(repo.url).repopath !== ghURL(app.remote).repopath) {
         console.log('aborted.')
         return
     }
@@ -149,8 +150,4 @@ function executeHook (appid, app, payload, cb) {
             })
         })
     })
-}
-
-function strip (url) {
-    return url.replace(/^(https?:\/\/|git@)github\.com(\/|:)|\.git$/g, '')
 }
