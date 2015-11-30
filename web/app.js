@@ -96,7 +96,7 @@ function verify (req, app, payload) {
     }
     // skip it with [pod skip] message
     // use gitlab's payload structure if detected
-    var commit = payload.head_commit ? payload.head_commit : 
+    var commit = payload.head_commit ? payload.head_commit :
         payload.commits[payload.commits.length - 1];
     console.log('commit message: ' + commit.message)
     if (/\[pod skip\]/.test(commit.message)) {
@@ -104,7 +104,10 @@ function verify (req, app, payload) {
         return
     }
     // check branch match
-    var branch = payload.ref.replace('refs/heads/', ''),
+    // support bitbucket webhooks payload structure
+    var ref = commit.branch ? commit.branch : payload.ref
+
+    var branch = ref.replace('refs/heads/', ''),
         expected = app.branch || 'master'
     console.log('expected branch: ' + expected + ', got branch: ' + branch)
     if (branch !== expected) {
