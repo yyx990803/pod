@@ -89,7 +89,7 @@ function verify (req, app, payload) {
     if (!app.remote) return
     // check repo match
 
-    console.log(payload)
+    console.log(JSON.stringify(payload))
     var repo = payload.repository
 
     if (/bitbucket\.org/.test(payload.canon_url)) {
