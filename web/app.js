@@ -89,11 +89,20 @@ function verify (req, app, payload) {
     if (!app.remote) return
     // check repo match
     var repo = payload.repository
-    console.log('\nreceived webhook request from: ' + repo.url)
-    if (ghURL(repo.url).repopath !== ghURL(app.remote).repopath) {
+
+    if (/bitbucket\.org/.test(payload.canon_url)) {
+        console.log('\nreceived webhook request from: ' + payload.canon_url + repo.absolute_url)
+    } else {
+        console.log('\nreceived webhook request from: ' + repo.url)
+    }
+
+    var repoURL = repo.absolute_url ? repo.absolute_url : repo.url
+
+    if (ghURL(repoURL).repopath !== ghURL(app.remote).repopath) {
         console.log('aborted.')
         return
     }
+
     // skip it with [pod skip] message
     // use gitlab's payload structure if detected
     var commit = payload.head_commit ? payload.head_commit :
