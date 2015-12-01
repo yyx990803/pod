@@ -137,6 +137,8 @@ You can also set up a remote app to track an arbitrary git address. However in t
 
 Starting in 0.8.2, GitLab webhooks are also supported.
 
+Starting in 0.8.6, Bitbucket webhooks are also supported.
+
 ## Configuration
 
 The config file lives at `~/.podrc`. Note since 0.7.0 all fields follow the underscore format so check your config file if things break after upgrading.
@@ -264,6 +266,12 @@ pod.once('ready', function () {
 The API methods follow a conventional error-first callback style. Refer to the source for more details.
 
 ## Changelog
+
+### 0.8.6
+
+- Added support for Bitbucket webhooks.
+- Added ability to specify entry point in app's config in `.podrc` by using the `script` field.
+- Fixed issue with the `readline` module blocking stdin. This caused issues when attempting to clone a repository that required a username/password.
 
 ### 0.8.0
 
