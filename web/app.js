@@ -89,34 +89,44 @@ function verify (req, app, payload) {
     if (!app.remote) return
     // check repo match
 
-    payload.repository.links.html.href
     var repo = payload.repository
 
+    // console.error(repo.links.html.href)
+
     if (/bitbucket\.org/.test(repo.links.html.href)) {
-        console.log('\nreceived webhook request from: ' + payload.canon_url + repo.absolute_url)
+        console.log('\nreceived webhook request from: ' + repo.links.html.href)
     } else {
         console.log('\nreceived webhook request from: ' + repo.url)
     }
 
-    var repoURL = repo.absolute_url ? repo.absolute_url : repo.url
+    var repoURL = repo.links.html.href ? repo.links.html.href : repo.url
 
     if (ghURL(repoURL).repopath !== ghURL(app.remote).repopath) {
         console.log('aborted.')
         return
     }
 
+    var commit
+
+    // support bitbucket webhooks payload structure
+    if (/bitbucket\.org/.test(repoURL)) {
+        commit = payload.push.changes[0].new
+
+        commit.message = commit.target.message
+    } else {
+        // use gitlab's payload structure if detected
+        commit = payload.head_commit ? payload.head_commit :
+            payload.commits[payload.commits.length - 1];
+    }
+
     // skip it with [pod skip] message
-    // use gitlab's payload structure if detected
-    var commit = payload.head_commit ? payload.head_commit :
-        payload.commits[payload.commits.length - 1];
     console.log('commit message: ' + commit.message)
     if (/\[pod skip\]/.test(commit.message)) {
         console.log('aborted.')
         return
     }
     // check branch match
-    // support bitbucket webhooks payload structure
-    var ref = commit.branch ? commit.branch : payload.ref
+    var ref = commit.name ? commit.name : payload.ref
 
     var branch = ref.replace('refs/heads/', ''),
         expected = app.branch || 'master'
