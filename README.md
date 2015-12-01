@@ -187,7 +187,7 @@ Example Config:
             // guarunteed to be correct.
             "port": 8080,
 
-            // pod will use this script before checking
+            // pod will look for this script before checking
             // in package.json of the app.
             "script": "dist/server.js",
 
