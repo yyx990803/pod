@@ -89,10 +89,10 @@ function verify (req, app, payload) {
     if (!app.remote) return
     // check repo match
 
-    console.log(JSON.stringify(payload))
+    payload.repository.links.html.href
     var repo = payload.repository
 
-    if (/bitbucket\.org/.test(payload.canon_url)) {
+    if (/bitbucket\.org/.test(repo.links.html.href)) {
         console.log('\nreceived webhook request from: ' + payload.canon_url + repo.absolute_url)
     } else {
         console.log('\nreceived webhook request from: ' + repo.url)
