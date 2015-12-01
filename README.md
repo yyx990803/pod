@@ -152,6 +152,7 @@ Example Config:
     "node_env": "development",
 
     // this can be overwritten in each app's package.json's "main" field
+    // or in the app's configuration below using the "script" field
     "default_script": "app.js",
 
     // minimum uptime to be considered stable,
@@ -185,6 +186,10 @@ Example Config:
             // main file (for displaying only), but not
             // guarunteed to be correct.
             "port": 8080,
+
+            // pod will look for this script before checking
+            // in package.json of the app.
+            "script": "dist/server.js",
 
             // *** any valid pm2 config here gets passed to pm2. ***
 
