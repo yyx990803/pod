@@ -90,16 +90,19 @@ function verify (req, app, payload) {
     // check repo match
 
     var repo = payload.repository
+    var repoURL
 
-    // console.error(repo.links.html.href)
-
-    if (/bitbucket\.org/.test(repo.links.html.href)) {
+    if (repo.links && /bitbucket\.org/.test(repo.links.html.href)) {
         console.log('\nreceived webhook request from: ' + repo.links.html.href)
+
+        repoURL = repo.links.html.href
     } else {
         console.log('\nreceived webhook request from: ' + repo.url)
+
+        repoURL = repo.url
     }
 
-    var repoURL = repo.links.html.href ? repo.links.html.href : repo.url
+    if (!repoURL) return
 
     if (ghURL(repoURL).repopath !== ghURL(app.remote).repopath) {
         console.log('aborted.')
@@ -119,6 +122,8 @@ function verify (req, app, payload) {
             payload.commits[payload.commits.length - 1];
     }
 
+    if (!commit) return
+
     // skip it with [pod skip] message
     console.log('commit message: ' + commit.message)
     if (/\[pod skip\]/.test(commit.message)) {
@@ -127,6 +132,8 @@ function verify (req, app, payload) {
     }
     // check branch match
     var ref = commit.name ? commit.name : payload.ref
+
+    if (!ref) return
 
     var branch = ref.replace('refs/heads/', ''),
         expected = app.branch || 'master'
