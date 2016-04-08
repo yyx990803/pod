@@ -47,6 +47,7 @@ That's it! App should be automatically running after the push. For later pushes,
 - [Using PM2 Directly](#using-pm2-directly)
 - [Custom Post-Receive Hook](#custom-post-receive-hook)
 - [Using the API](#using-the-api)
+- [Docker images](#Docker-images)
 - [Changelog](#changelog)
 
 ## Prerequisites
@@ -264,6 +265,13 @@ pod.once('ready', function () {
 ```
 
 The API methods follow a conventional error-first callback style. Refer to the source for more details.
+
+## Docker images
+
+Ready to go docker images:
+
+* [alpine linux](https://github.com/coderofsalvation/docker.alpine.nodejs.pod) 
+* [ubuntu linux](https://github.com/raiscui/docker-pod)
 
 ## Changelog
 
