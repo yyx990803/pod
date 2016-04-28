@@ -14,7 +14,7 @@ var temp         = path.resolve(__dirname, '../temp'),
     stubScript   = fs.readFileSync(path.resolve(__dirname, 'fixtures/app.js'), 'utf-8'),
     podhookStub  = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podhook'), 'utf-8'),
     testPort     = process.env.PORT || 18080
-    
+
 process.env.POD_CONF = testConfPath
 process.on('exit', function () {
     delete process.env.POD_CONF
@@ -55,7 +55,7 @@ function setup (done) {
 describe('API', function () {
 
     describe('.reloadConfig', function () {
-        
+
         it('should reload the conf', function () {
             var modified = JSON.parse(fs.readFileSync(testConfPath, 'utf-8'))
             modified.default_script = 'app.js'
@@ -150,7 +150,7 @@ describe('API', function () {
     })
 
     describe('.stopApp( appname, callback )', function () {
-        
+
         it('should stop the app', function (done) {
             pod.stopApp('test', function (err, msg) {
                 if (err) return done(err)
@@ -205,7 +205,7 @@ describe('API', function () {
     })
 
     describe('.stopAllApps( callback )', function () {
-        
+
         it('should not get an error', function (done) {
             pod.stopAllApps(function (err, msgs) {
                 if (err) return done(err)
@@ -230,11 +230,11 @@ describe('API', function () {
         before(function (done) {
             pod.createApp('test3', function () {
                 exec('rm -rf ' + appsDir + '/test3', function () {
-                    pod.startApp('test', done)  
+                    pod.startApp('test', done)
                 })
             })
         })
-        
+
         it('should provide a list of apps\' info', function (done) {
             pod.listApps(function (err, apps) {
                 if (err) return done(err)
@@ -272,7 +272,7 @@ describe('API', function () {
     describe('.restartApp( appname, callback )', function () {
 
         var beforeRestartStamp
-        
+
         it('should restart a running app without error', function (done) {
             beforeRestartStamp = Date.now()
             pod.restartApp('test', done)
@@ -299,7 +299,7 @@ describe('API', function () {
     })
 
     describe('.restartAllApps()', function () {
-        
+
         var beforeRestartStamp
 
         it('should stop all running instances', function (done) {
@@ -338,7 +338,7 @@ describe('API', function () {
             var config = pod.getConfig()
             assert.ok(!('test' in config.apps), 'test should no longer be in apps')
         })
-        
+
         it('should have removed all the app files', function () {
             assert.ok(!fs.existsSync(app.workPath), 'working copy')
             assert.ok(!fs.existsSync(app.repoPath), 'git repo')
@@ -370,7 +370,7 @@ describe('API', function () {
             appsDir + '/prunedir',
             reposDir + '/prunedir'
         ]
-        
+
         before(function () {
             files.forEach(function (f) {
                 fs.writeFileSync(f)
@@ -399,7 +399,7 @@ describe('API', function () {
     })
 
     describe('updateHooks()', function () {
-        
+
         it('should update the hook to the current template', function (done) {
             var app = pod.getAppInfo('test2'),
                 hookPath = app.repoPath + '/hooks/post-receive',
@@ -429,15 +429,15 @@ describe('git push', function () {
         git = 'git' +
             ' --git-dir=' + app.workPath + '/.git' +
             ' --work-tree=' + app.workPath
-        
+
         // add custom hook
         fs.writeFileSync(app.workPath + '/.podhook', podhookStub)
-        
+
         // modify git post-receive hook for test
         var hookPath = app.repoPath + '/hooks/post-receive',
             hook = fs.readFileSync(hookPath, 'utf-8').replace(/^pod\s/g, 'POD_CONF=' + testConfPath + ' pod ')
         fs.writeFileSync(hookPath, hook)
-        
+
         exec(
             git + ' add ' + app.workPath + '; ' +
             git + ' commit -m \'test\'',
@@ -459,7 +459,7 @@ describe('git push', function () {
     })
 
     it('should reset working tree if podhook exits with code other than 0', function (done) {
-        
+
         var commit,
             clonePath = root + '/clone',
             cloneGit = 'git' +
@@ -474,7 +474,7 @@ describe('git push', function () {
                 modifyHook()
             })
         })
-        
+
         function modifyHook () {
             // modify hook in a different copy of the repo
             // and push it.
@@ -504,7 +504,7 @@ describe('git push', function () {
         }
 
     })
-    
+
 })
 
 describe('web interface', function () {
@@ -517,7 +517,7 @@ describe('web interface', function () {
             done()
         })
     })
-        
+
     it('should start with no problem', function (done) {
         pod.startApp(webInterfaceId, function (err, msg) {
             if (err) return done(err)
@@ -590,7 +590,7 @@ describe('remote app', function () {
             })
         })
     })
-    
+
     it('should create a remote app', function (done) {
         pod.createApp('remote-test', {
             remote: repoPath
@@ -694,6 +694,44 @@ describe('remote app', function () {
                 assert.ok(fs.existsSync(appPath + '/app.js'))
                 expectWorkingPort(port, done, { delay: 1000 })
             }, 300)
+        })
+    })
+
+    it('should return 200 if request is a webhook ping', function (done) {
+        request({
+            url: 'http://localhost:19999/hooks/remote-test',
+            method: 'POST',
+            headers: {
+                'X-Github-Event': 'ping'
+            },
+            form: {
+                repository: {
+                    url: repoPath
+                }
+            }
+        }, function (err, res) {
+            if (err) return done(err)
+            assert.equal(res.statusCode, 200)
+            done()
+        })
+    })
+
+    it('should return 500 if request is a webhook ping but path is wrong', function (done) {
+        request({
+            url: 'http://localhost:19999/hooks/remote-test',
+            method: 'POST',
+            headers: {
+                'X-Github-Event': 'ping'
+            },
+            form: {
+                repository: {
+                    url: 'lolwut'
+                }
+            }
+        }, function (err, res) {
+            if (err) return done(err)
+            assert.equal(res.statusCode, 500)
+            done()
         })
     })
 

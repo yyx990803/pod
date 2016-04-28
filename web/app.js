@@ -58,6 +58,14 @@ app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
         return res.end(e.toString())
     }
 
+    if (req.get('X-GitHub-Event') === 'ping') {
+        if (ghURL(payload.repository.url).repopath === ghURL(app.remote).repopath) {
+            return res.status(200).end()
+        } else {
+            return res.status(500).end()
+        }
+    }
+
     if (app && verify(req, app, payload)) {
         executeHook(appid, app, payload, function () {
             res.end()
