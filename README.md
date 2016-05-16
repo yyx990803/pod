@@ -217,12 +217,12 @@ Example Config:
             "branch": "test" // if not specified, defaults to master
         }
     },
-    
+
     // pass environment variables to all apps
     "env": {
         "SERVER_NAME": "Commodore",
         "CERT_DIR": "/path/to/certs"
-    }  
+    }
 }
 ```
 
@@ -276,10 +276,15 @@ The API methods follow a conventional error-first callback style. Refer to the s
 
 Ready to go docker images:
 
-* [alpine linux](https://github.com/coderofsalvation/docker.alpine.nodejs.pod) 
+* [alpine linux](https://github.com/coderofsalvation/docker.alpine.nodejs.pod)
 * [ubuntu linux](https://github.com/raiscui/docker-pod)
 
 ## Changelog
+
+### 0.9.0
+
+- Support `env` option in `.podrc` which passes environment variables to all apps managed by pod.
+- Fixed GitHub ping event error when using remote GitHub repo.
 
 ### 0.8.6
 
