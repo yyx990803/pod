@@ -216,7 +216,13 @@ Example Config:
             "remote": "yyx990803/my-remote-app", // github shorthand
             "branch": "test" // if not specified, defaults to master
         }
-    }
+    },
+    
+    // pass environment variables to all apps
+    "env": {
+        "SERVER_NAME": "Commodore",
+        "CERT_DIR": "/path/to/certs"
+    }  
 }
 ```
 
