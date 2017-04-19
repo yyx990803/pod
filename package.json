@@ -1,13 +1,13 @@
 {
   "name": "pod",
   "version": "0.9.0",
-  "preferGlobal": "true",
+  "preferGlobal": true,
   "author": {
     "name": "Evan You",
     "email": "yyx990803@gmail.com"
   },
   "dependencies": {
-    "pm2": "^0.12.9",
+    "pm2": "^2.4.5",
     "parse-github-url": "^0.2.0",
     "colors": "^0.6.0",
     "async": "^0.9.0",
@@ -33,8 +33,7 @@
     "url": "http://github.com/yyx990803/pod.git"
   },
   "bin": {
-    "pod": "./bin/pod",
-    "pm2": "./node_modules/pm2/bin/pm2"
+    "pod": "./bin/pod"
   },
   "engines": {
     "node": ">= 0.8.x"
