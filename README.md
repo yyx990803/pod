@@ -279,7 +279,12 @@ Ready to go docker images:
 * [alpine linux](https://github.com/coderofsalvation/docker.alpine.nodejs.pod)
 * [ubuntu linux](https://github.com/raiscui/docker-pod)
 
-## Changelog
+## Changelog  
+
+### 0.9.1  
+
+- Move to latest pm2  
+- Added support for Node 7.x  
 
 ### 0.9.0
 
