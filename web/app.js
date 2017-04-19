@@ -1,11 +1,11 @@
-var http     = require('http'),
-    fs       = require('fs'),
-    path     = require('path'),
-    spawn    = require('child_process').spawn,
-    express  = require('express'),
-    pod      = require('../lib/api'),
-    ghURL    = require('parse-github-url'),
-    app      = express()
+var http = require('http'),
+    fs = require('fs'),
+    path = require('path'),
+    spawn = require('child_process').spawn,
+    express = require('express'),
+    pod = require('../lib/api'),
+    ghURL = require('parse-github-url'),
+    app = express()
 
 // late def, wait until pod is ready
 var conf
@@ -22,7 +22,7 @@ var auth = express.basicAuth(function (user, pass) {
     return user === u && pass === p
 })
 
-app.configure(function(){
+app.configure(function () {
     app.set('views', __dirname + '/views')
     app.set('view engine', 'ejs')
     app.use(express.favicon())
@@ -59,7 +59,7 @@ app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
     }
 
     if (req.get('X-GitHub-Event') === 'ping') {
-        if (ghURL(payload.repository.url).repopath === ghURL(app.remote).repopath) {
+        if (ghURL(payload.repository.git_url).repopath === ghURL(app.remote).repopath) {
             return res.status(200).end()
         } else {
             return res.status(500).end()
@@ -92,7 +92,7 @@ pod.once('ready', function () {
 })
 
 // Helpers
-function verify (req, app, payload) {
+function verify(req, app, payload) {
     // not even a remote app
     if (!app.remote) return
     // check repo match
@@ -153,12 +153,12 @@ function verify (req, app, payload) {
     return true
 }
 
-function executeHook (appid, app, payload, cb) {
+function executeHook(appid, app, payload, cb) {
 
     // set a response timeout to avoid GitHub webhooks
     // hanging up due to long build times
     var responded = false
-    function respond (err) {
+    function respond(err) {
         if (!responded) {
             responded = true
             cb(err)
