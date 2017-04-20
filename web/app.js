@@ -12,7 +12,7 @@ const
     basicAuth = require('basic-auth');
 
 // late def, wait until pod is ready
-var conf
+var conf = pod.reloadConfig()
 
 // middlewares
 var reloadConf = function (req, res, next) {
@@ -30,6 +30,9 @@ var auth = function(username, password) {
 		next();
 	}; 
 };
+var aauth = ()=>{
+	return auth((conf.web.username || 'admin'),(conf.web.password || 'admin'));
+}
 
 
 app.set('views', __dirname + '/views')
@@ -40,7 +43,7 @@ app.use(bodyParser.json())
 app.use(statics(path.join(__dirname, 'static')))
 
 
-app.get('/', auth((conf.web.username || 'admin'),(conf.web.password || 'admin')), function (req, res) {
+app.get('/', aauth, function (req, res) {
     pod.listApps(function (err, list) {
         if (err) return res.end(err)
         res.render('index', {
@@ -49,7 +52,7 @@ app.get('/', auth((conf.web.username || 'admin'),(conf.web.password || 'admin'))
     })
 })
 
-app.get('/json', auth((conf.web.username || 'admin'),(conf.web.password || 'admin')), function (req, res) {
+app.get('/json', aauth, function (req, res) {
     pod.listApps(function (err, list) {
         if (err) return res.end(err)
         res.json(list)
