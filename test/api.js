@@ -20,7 +20,7 @@ process.on('exit', function () {
     delete process.env.POD_CONF
 })
 
-var pod
+var pod = require('../lib/api')
 
 // setup ----------------------------------------------------------------------
 
@@ -45,7 +45,6 @@ function setup(done) {
         if (err) return done(err)
         fs.mkdirSync(temp)
         fs.writeFileSync(testConfPath, testConf.replace('{{root}}', root))
-        pod = require('../lib/api')
         pod.once('ready', done)
     })
 }
