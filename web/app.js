@@ -8,7 +8,8 @@ const
     ghURL = require('parse-github-url'),
     app = express(),
     favicon = require('serve-favicon'),
-    statics = require('serve-static')
+    statics = require('serve-static'),
+    basicAuth = require('basic-auth');
 
 // late def, wait until pod is ready
 var conf
@@ -19,10 +20,15 @@ var reloadConf = function (req, res, next) {
     next()
 }
 
-var auth = express.basicAuth(function (user, pass) {
+var auth = basicAuth(function (user, pass) {
     var u = conf.web.username || 'admin',
         p = conf.web.password || 'admin'
-    return user === u && pass === p
+    if(!( user === u && pass === p ))
+    {
+    	res.set('WWW-Authenticate', 'Basic realm=Authorization Required'); 
+    	return res.send(401);
+    }
+    next();
 })
 
 app.configure(function () {
@@ -194,3 +200,4 @@ function executeHook(appid, app, payload, cb) {
         })
     })
 }
+    
