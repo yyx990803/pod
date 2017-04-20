@@ -1,11 +1,14 @@
-var http = require('http'),
+const
+	bodyParser = require('body-parser');
     fs = require('fs'),
     path = require('path'),
     spawn = require('child_process').spawn,
     express = require('express'),
     pod = require('../lib/api'),
     ghURL = require('parse-github-url'),
-    app = express()
+    app = express(),
+    favicon = require('serve-favicon'),
+    statics = require('serve-static')
 
 // late def, wait until pod is ready
 var conf
@@ -25,10 +28,11 @@ var auth = express.basicAuth(function (user, pass) {
 app.configure(function () {
     app.set('views', __dirname + '/views')
     app.set('view engine', 'ejs')
-    app.use(express.favicon())
+    app.use(favicon())
     app.use(reloadConf)
     app.use(app.router)
-    app.use(express.static(path.join(__dirname, 'static')))
+    app.use(bodyParser.json())
+    app.use(statics(path.join(__dirname, 'static')))
 })
 
 app.get('/', auth, function (req, res) {
@@ -47,7 +51,7 @@ app.get('/json', auth, function (req, res) {
     })
 })
 
-app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
+app.post('/hooks/:appid', function (req, res) {
     var appid = req.params.appid,
         payload = JSON.stringify(req.body),
         app = conf.apps[appid]
