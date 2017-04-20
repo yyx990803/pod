@@ -31,15 +31,15 @@ var auth = function(username, password) {
 	}; 
 };
 
-app.configure(function () {
-    app.set('views', __dirname + '/views')
-    app.set('view engine', 'ejs')
-    app.use(favicon())
-    app.use(reloadConf)
-    app.use(app.router)
-    app.use(bodyParser.json())
-    app.use(statics(path.join(__dirname, 'static')))
-})
+
+app.set('views', __dirname + '/views')
+app.set('view engine', 'ejs')
+app.use(favicon())
+app.use(reloadConf)
+app.use(app.router)
+app.use(bodyParser.json())
+app.use(statics(path.join(__dirname, 'static')))
+
 
 app.get('/', auth((conf.web.username || 'admin'),(conf.web.password || 'admin')), function (req, res) {
     pod.listApps(function (err, list) {
