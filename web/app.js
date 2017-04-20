@@ -36,7 +36,6 @@ app.set('views', __dirname + '/views')
 app.set('view engine', 'ejs')
 //app.use(favicon())
 app.use(reloadConf)
-app.use(app.router)
 app.use(bodyParser.json())
 app.use(statics(path.join(__dirname, 'static')))
 
