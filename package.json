@@ -12,6 +12,7 @@
     "colors": "^1.1.2",
     "async": "^2.3.0",
     "mkdirp": "^0.5.1",
+    "body-parser": "^1.17.1",
     "cli-table": "^0.3.1",
     "express": "^4.15.2",
     "ejs": "^2.5.6",
