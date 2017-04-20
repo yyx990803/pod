@@ -19,17 +19,17 @@ var reloadConf = function (req, res, next) {
     conf = pod.reloadConfig()
     next()
 }
-
-var auth = basicAuth(function (user, pass) {
-    var u = conf.web.username || 'admin',
-        p = conf.web.password || 'admin'
-    if(!( user === u && pass === p ))
-    {
-    	res.set('WWW-Authenticate', 'Basic realm=Authorization Required'); 
-    	return res.send(401);
-    }
-    next();
-})
+var auth = function(username, password) {
+	return function(req, res, next) { 
+		var user = basicAuth(req); 
+		if (!user || user.name !== username || user.pass !== password) 
+		{ 
+			res.set('WWW-Authenticate', 'Basic realm=Authorization Required'); 
+			return res.send(401); 
+		} 
+		next();
+	}; 
+};
 
 app.configure(function () {
     app.set('views', __dirname + '/views')
@@ -41,7 +41,7 @@ app.configure(function () {
     app.use(statics(path.join(__dirname, 'static')))
 })
 
-app.get('/', auth, function (req, res) {
+app.get('/', auth((conf.web.username || 'admin'),(conf.web.password || 'admin')), function (req, res) {
     pod.listApps(function (err, list) {
         if (err) return res.end(err)
         res.render('index', {
@@ -50,7 +50,7 @@ app.get('/', auth, function (req, res) {
     })
 })
 
-app.get('/json', auth, function (req, res) {
+app.get('/json', auth((conf.web.username || 'admin'),(conf.web.password || 'admin')), function (req, res) {
     pod.listApps(function (err, list) {
         if (err) return res.end(err)
         res.json(list)
