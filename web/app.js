@@ -7,7 +7,7 @@ const
     pod = require('../lib/api'),
     ghURL = require('parse-github-url'),
     app = express(),
-    favicon = require('serve-favicon'),
+   // favicon = require('serve-favicon'),
     statics = require('serve-static'),
     basicAuth = require('basic-auth');
 
@@ -34,7 +34,7 @@ var auth = function(username, password) {
 
 app.set('views', __dirname + '/views')
 app.set('view engine', 'ejs')
-app.use(favicon())
+//app.use(favicon())
 app.use(reloadConf)
 app.use(app.router)
 app.use(bodyParser.json())
