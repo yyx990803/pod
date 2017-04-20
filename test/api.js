@@ -20,8 +20,7 @@ process.on('exit', function () {
     delete process.env.POD_CONF
 })
 
-var pod = require('../lib/api')
-
+let pod;
 // setup ----------------------------------------------------------------------
 
 before(function (done) {
@@ -45,6 +44,7 @@ function setup(done) {
         if (err) return done(err)
         fs.mkdirSync(temp)
         fs.writeFileSync(testConfPath, testConf.replace('{{root}}', root))
+        pod = require('../lib/api')
         pod.once('ready', done)
     })
 }
@@ -206,12 +206,14 @@ describe('API', function () {
     describe('.stopAllApps( callback )', function () {
 
         it('should not get an error', function (done) {
-            pod.stopAllApps(function (err, msgs) {
-                if (err) return done(err)
-                assert.ok(Array.isArray(msgs), 'should get an array of messages')
-                assert.equal(msgs.length, 2, 'should get two messages')
-                done()
-            })
+            if (pod) {
+                pod.stopAllApps(function (err, msgs) {
+                    if (err) return done(err)
+                    assert.ok(Array.isArray(msgs), 'should get an array of messages')
+                    assert.equal(msgs.length, 2, 'should get two messages')
+                    done()
+                })
+            }
         })
 
         it('should no longer be using the two ports', function (done) {
@@ -741,7 +743,8 @@ describe('remote app', function () {
 after(function (done) {
     pod.stopAllApps(function (err) {
         if (err) return done(err)
-        exec('rm -rf ' + temp + '; pm2 kill', done)
+        fs.rmdirSync(temp);
+        exec('pm2 kill', done)
     })
 })
 
