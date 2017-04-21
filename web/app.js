@@ -1,13 +1,13 @@
 const
-	bodyParser = require('body-parser');
-    fs = require('fs'),
+    bodyParser = require('body-parser');
+fs = require('fs'),
     path = require('path'),
     spawn = require('child_process').spawn,
     express = require('express'),
     pod = require('../lib/api'),
     ghURL = require('parse-github-url'),
     app = express(),
-   // favicon = require('serve-favicon'),
+    // favicon = require('serve-favicon'),
     statics = require('serve-static'),
     basicAuth = require('basic-auth');
 
@@ -19,21 +19,17 @@ var reloadConf = function (req, res, next) {
     conf = pod.reloadConfig()
     next()
 }
-var auth = function(username, password) {
-	return function(req, res, next) { 
-		var user = basicAuth(req); 
-		if (!user || user.name !== username || user.pass !== password) 
-		{ 
-			res.set('WWW-Authenticate', 'Basic realm=Authorization Required'); 
-			return res.send(401); 
-		} 
-		next();
-	}; 
+var auth = function (req, res, next) {
+    var user = basicAuth(req);
+    const username = (conf.web.username || 'admin');
+    const password = (conf.web.password || 'admin');
+    console.log(JSON.stringify(user))
+    if (!user || user.name !== username || user.pass !== password) {
+        res.setHeader('WWW-Authenticate', 'Basic realm=Authorization Required');
+        return res.sendStatus(401);
+    }
+    next();
 };
-var aauth = ()=>{
-	return auth((conf.web.username || 'admin'),(conf.web.password || 'admin'));
-}
-
 
 app.set('views', __dirname + '/views')
 app.set('view engine', 'ejs')
@@ -43,19 +39,20 @@ app.use(bodyParser.json())
 app.use(statics(path.join(__dirname, 'static')))
 
 
-app.get('/', aauth, function (req, res) {
+app.get('/', auth, function (req, res) {
     pod.listApps(function (err, list) {
         if (err) return res.end(err)
-        res.render('index', {
+        return res.render('index', {
             apps: list
         })
     })
 })
 
-app.get('/json', aauth, function (req, res) {
+app.get('/json', auth, function (req, res) {
     pod.listApps(function (err, list) {
         if (err) return res.end(err)
         res.json(list)
+        res.end();
     })
 })
 
@@ -202,4 +199,4 @@ function executeHook(appid, app, payload, cb) {
         })
     })
 }
-    
+
