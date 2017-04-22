@@ -1,40 +1,48 @@
-var http     = require('http'),
-    fs       = require('fs'),
-    path     = require('path'),
-    spawn    = require('child_process').spawn,
-    express  = require('express'),
-    pod      = require('../lib/api'),
-    ghURL    = require('parse-github-url'),
-    app      = express()
+const
+    bodyParser = require('body-parser');
+fs = require('fs'),
+    path = require('path'),
+    spawn = require('child_process').spawn,
+    express = require('express'),
+    pod = require('../lib/api'),
+    ghURL = require('parse-github-url'),
+    app = express(),
+    // favicon = require('serve-favicon'),
+    statics = require('serve-static'),
+    basicAuth = require('basic-auth');
 
 // late def, wait until pod is ready
-var conf
+var conf = pod.reloadConfig()
 
 // middlewares
 var reloadConf = function (req, res, next) {
     conf = pod.reloadConfig()
     next()
 }
+var auth = function (req, res, next) {
+    var user = basicAuth(req);
+    const username = (conf.web.username || 'admin');
+    const password = (conf.web.password || 'admin');
+    console.log(JSON.stringify(user))
+    if (!user || user.name !== username || user.pass !== password) {
+        res.setHeader('WWW-Authenticate', 'Basic realm=Authorization Required');
+        return res.sendStatus(401);
+    }
+    next();
+};
 
-var auth = express.basicAuth(function (user, pass) {
-    var u = conf.web.username || 'admin',
-        p = conf.web.password || 'admin'
-    return user === u && pass === p
-})
+app.set('views', __dirname + '/views')
+app.set('view engine', 'ejs')
+//app.use(favicon())
+app.use(reloadConf)
+app.use(bodyParser.json())
+app.use(statics(path.join(__dirname, 'static')))
 
-app.configure(function(){
-    app.set('views', __dirname + '/views')
-    app.set('view engine', 'ejs')
-    app.use(express.favicon())
-    app.use(reloadConf)
-    app.use(app.router)
-    app.use(express.static(path.join(__dirname, 'static')))
-})
 
 app.get('/', auth, function (req, res) {
     pod.listApps(function (err, list) {
         if (err) return res.end(err)
-        res.render('index', {
+        return res.render('index', {
             apps: list
         })
     })
@@ -44,10 +52,11 @@ app.get('/json', auth, function (req, res) {
     pod.listApps(function (err, list) {
         if (err) return res.end(err)
         res.json(list)
+        res.end();
     })
 })
 
-app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
+app.post('/hooks/:appid', function (req, res) {
     var appid = req.params.appid,
         payload = JSON.stringify(req.body),
         app = conf.apps[appid]
@@ -59,7 +68,7 @@ app.post('/hooks/:appid', express.bodyParser(), function (req, res) {
     }
 
     if (req.get('X-GitHub-Event') === 'ping') {
-        if (ghURL(payload.repository.url).repopath === ghURL(app.remote).repopath) {
+        if (ghURL(payload.repository.git_url).repopath === ghURL(app.remote).repopath) {
             return res.status(200).end()
         } else {
             return res.status(500).end()
@@ -92,7 +101,7 @@ pod.once('ready', function () {
 })
 
 // Helpers
-function verify (req, app, payload) {
+function verify(req, app, payload) {
     // not even a remote app
     if (!app.remote) return
     // check repo match
@@ -153,12 +162,12 @@ function verify (req, app, payload) {
     return true
 }
 
-function executeHook (appid, app, payload, cb) {
+function executeHook(appid, app, payload, cb) {
 
     // set a response timeout to avoid GitHub webhooks
     // hanging up due to long build times
     var responded = false
-    function respond (err) {
+    function respond(err) {
         if (!responded) {
             responded = true
             cb(err)
@@ -190,3 +199,4 @@ function executeHook (appid, app, payload, cb) {
         })
     })
 }
+

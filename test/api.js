@@ -1,27 +1,26 @@
-var assert  = require('assert'),
-    fs      = require('fs'),
-    path    = require('path'),
-    http    = require('http'),
-    exec    = require('child_process').exec,
+const assert = require('assert'),
+    fs = require('fs'),
+    path = require('path'),
+    http = require('http'),
+    exec = require('child_process').exec,
     request = require('request')
 
-var temp         = path.resolve(__dirname, '../temp'),
-    root         = temp + '/root',
-    appsDir      = root + '/apps',
-    reposDir     = root + '/repos',
+let temp = path.resolve(__dirname, '../temp'),
+    root = temp + '/root',
+    appsDir = root + '/apps',
+    reposDir = root + '/repos',
     testConfPath = temp + '/.podrc',
-    testConf     = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podrc'), 'utf-8'),
-    stubScript   = fs.readFileSync(path.resolve(__dirname, 'fixtures/app.js'), 'utf-8'),
-    podhookStub  = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podhook'), 'utf-8'),
-    testPort     = process.env.PORT || 18080
+    testConf = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podrc'), 'utf-8'),
+    stubScript = fs.readFileSync(path.resolve(__dirname, 'fixtures/app.js'), 'utf-8'),
+    podhookStub = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podhook'), 'utf-8'),
+    testPort = process.env.PORT || 18080
 
 process.env.POD_CONF = testConfPath
 process.on('exit', function () {
     delete process.env.POD_CONF
 })
 
-var pod
-
+let pod;
 // setup ----------------------------------------------------------------------
 
 before(function (done) {
@@ -40,7 +39,7 @@ before(function (done) {
     }
 })
 
-function setup (done) {
+function setup(done) {
     exec('rm -rf ' + temp, function (err) {
         if (err) return done(err)
         fs.mkdirSync(temp)
@@ -85,7 +84,7 @@ describe('API', function () {
             )
         })
 
-        it ('should update the config with app\'s entry', function () {
+        it('should update the config with app\'s entry', function () {
             var config = pod.getConfig()
             assert.ok(config.apps.test)
         })
@@ -207,12 +206,14 @@ describe('API', function () {
     describe('.stopAllApps( callback )', function () {
 
         it('should not get an error', function (done) {
-            pod.stopAllApps(function (err, msgs) {
-                if (err) return done(err)
-                assert.ok(Array.isArray(msgs), 'should get an array of messages')
-                assert.equal(msgs.length, 2, 'should get two messages')
-                done()
-            })
+            if (pod) {
+                pod.stopAllApps(function (err, msgs) {
+                    if (err) return done(err)
+                    assert.ok(Array.isArray(msgs), 'should get an array of messages')
+                    assert.equal(msgs.length, 2, 'should get two messages')
+                    done()
+                })
+            }
         })
 
         it('should no longer be using the two ports', function (done) {
@@ -475,7 +476,7 @@ describe('git push', function () {
             })
         })
 
-        function modifyHook () {
+        function modifyHook() {
             // modify hook in a different copy of the repo
             // and push it.
             fs.writeFileSync(clonePath + '/.podhook', 'touch testfile2; exit 1')
@@ -490,7 +491,7 @@ describe('git push', function () {
             )
         }
 
-        function checkCommit () {
+        function checkCommit() {
             exec(git + ' log -1 | awk \'NR==1 {print $2}\'', function (err, cmt) {
                 if (err) return done(err)
                 // make sure the hook is actually executed
@@ -533,7 +534,7 @@ describe('web interface', function () {
             delay: 300
         })
 
-        function next () {
+        function next() {
             expectWorkingPort(19999, done, {
                 path: '/json',
                 code: 401,
@@ -578,7 +579,7 @@ describe('remote app', function () {
 
     var repoPath = temp + '/remote-test.git',
         workPath = temp + '/remote-test',
-        appPath  = appsDir + '/remote-test',
+        appPath = appsDir + '/remote-test',
         port = testPort + 2,
         git = 'git --git-dir=' + workPath + '/.git --work-tree=' + workPath
 
@@ -742,16 +743,17 @@ describe('remote app', function () {
 after(function (done) {
     pod.stopAllApps(function (err) {
         if (err) return done(err)
-        exec('rm -rf ' + temp + '; pm2 kill', done)
+        fs.rmdirSync(temp);
+        exec('pm2 kill', done)
     })
 })
 
 // helpers --------------------------------------------------------------------
 
-function expectRestart (port, beforeRestartStamp, done) {
+function expectRestart(port, beforeRestartStamp, done) {
     setTimeout(function () {
         request('http://localhost:' + port, function (err, res, body) {
-            if (err) return done (err)
+            if (err) return done(err)
             assert.equal(res.statusCode, 200)
             var restartStamp = body.match(/\((\d+)\)/)[1]
             restartStamp = parseInt(restartStamp, 10)
@@ -761,7 +763,7 @@ function expectRestart (port, beforeRestartStamp, done) {
     }, 300)
 }
 
-function expectWorkingPort (port, done, options) {
+function expectWorkingPort(port, done, options) {
     options = options || {}
     setTimeout(function () {
         request('http://' + (options.auth || '') + 'localhost:' + port + (options.path || ''), function (err, res, body) {
@@ -778,7 +780,7 @@ function expectWorkingPort (port, done, options) {
     }, options.delay || 300) // small interval to make sure it has finished
 }
 
-function expectBadPort (port, done) {
+function expectBadPort(port, done) {
     request({
         url: 'http://localhost:' + port,
         timeout: 500
