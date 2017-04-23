@@ -21,7 +21,7 @@ $ pod create myapp
 **On your local machine:**
 
 ``` bash
-$ git clone ssh://your-server/pod_dir/myapp.git
+$ git clone ssh://your-server/pod_dir/repos/myapp.git
 # hack hack hack, commit
 # make sure your main file is app.js
 # or specify "main" in package.json
